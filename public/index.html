@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معلّم القدرات — Qudrat AI Tutor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Qiyasy official typography (per brand guide): IBM Plex Sans Arabic + IBM Plex Sans
+     are the primary identity fonts — no Tajawal anywhere in the guide, so it's gone. -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <div class="phone">
+    <header class="topbar">
+      <img src="/logo-white.png" alt="قياسي Qiyasy" class="topbar-logo">
+      <button class="topbar-bell" id="notificationBell" onclick="App.goToNotifications()" aria-label="الإشعارات">
+        🔔
+        <span class="topbar-bell-badge" id="notificationBadge" hidden></span>
+      </button>
+    </header>
+
+    <main id="app">
+
+      <!-- SCREEN: splash (first launch — logo, tagline, brief loading beat before
+           the app decides where to route the student: language selection first
+           launch, or straight to dashboard on a returning session). -->
+      <section class="screen" data-screen="splash">
+        <div class="splash-content">
+          <img src="/logo.png" alt="قياسي Qiyasy" class="splash-logo">
+          <p class="splash-tagline" data-i18n="splash_tagline">منصتك نحو التميز</p>
+          <div class="splash-loader"><span></span><span></span><span></span></div>
+        </div>
+      </section>
+
+      <!-- SCREEN: language selection (first launch only) -->
+      <section class="screen" data-screen="language-select" hidden>
+        <div class="onboarding-progress">
+          <span class="onboarding-progress-seg active"></span>
+          <span class="onboarding-progress-seg"></span>
+        </div>
+        <div class="hero hero-compact">
+          <span class="onboarding-icon" aria-hidden="true">🌐</span>
+          <h1 data-i18n="lang_select_title">لغة الواجهة</h1>
+          <p class="hero-sub" data-i18n="lang_select_sub">يمكنك تغيير هذا لاحقًا من الإعدادات</p>
+        </div>
+        <div class="lang-option-grid">
+          <button type="button" class="lang-option" data-lang="ar" onclick="App.selectLanguage('ar')">
+            <span class="lang-option-flag lang-option-flag-ar">ع</span>
+            <span data-i18n="lang_option_ar">العربية</span>
+          </button>
+          <button type="button" class="lang-option" data-lang="en" onclick="App.selectLanguage('en')">
+            <span class="lang-option-flag lang-option-flag-en">A</span>
+            <span data-i18n="lang_option_en">English</span>
+          </button>
+        </div>
+        <button class="btn-primary" onclick="App.goToGenderSelect()" data-i18n="lang_continue">متابعة</button>
+      </section>
+
+      <!-- SCREEN: gender personalization (first launch only, always skippable).
+           The app must never assume gender before this is answered — every
+           static string elsewhere is phrased neutrally by default. -->
+      <section class="screen" data-screen="gender-select" hidden>
+        <div class="onboarding-progress">
+          <span class="onboarding-progress-seg done"></span>
+          <span class="onboarding-progress-seg active"></span>
+        </div>
+        <div class="hero hero-compact">
+          <span class="onboarding-icon" aria-hidden="true">🙋</span>
+          <h1 data-i18n="gender_title">طريقة المخاطبة المفضّلة</h1>
+          <p class="hero-sub" data-i18n="gender_sub">هذا يساعد على استخدام الصيغة المناسبة أثناء المحادثة — يمكن تخطي هذا السؤال في أي وقت.</p>
+        </div>
+        <div class="gender-option-grid">
+          <button type="button" class="gender-option" data-gender="male" onclick="App.selectGender('male'); App.completeOnboarding()" data-i18n="gender_male">ذكر</button>
+          <button type="button" class="gender-option" data-gender="female" onclick="App.selectGender('female'); App.completeOnboarding()" data-i18n="gender_female">أنثى</button>
+        </div>
+        <button class="btn-link" onclick="App.selectGender('unspecified'); App.completeOnboarding()" data-i18n="gender_skip">أفضّل عدم التحديد</button>
+      </section>
+
+      <!-- SCREEN: welcome -->
+      <section class="screen" data-screen="welcome" hidden>
+        <div class="hero">
+          <img src="/logo.png" alt="قياسي Qiyasy" class="welcome-logo">
+          <p class="eyebrow" data-i18n="welcome_eyebrow">قبل ما نبدأ</p>
+          <h1><span data-i18n="welcome_title_line1">معلّمك الشخصي</span><br><span data-i18n="welcome_title_line2">لاختبار القدرات</span></h1>
+          <p class="hero-sub" data-i18n="welcome_sub">يعرف مستوى الإتقان الحالي، وش لسا يحتاج شغل، ويختار أنسب خطوة تالية — مو أسئلة عشوائية.</p>
+        </div>
+        <button class="btn-primary" onclick="App.goToRegister()" data-i18n="welcome_cta_register">إنشاء حساب جديد</button>
+        <button class="btn-link" onclick="App.goToLogin()" data-i18n="welcome_cta_login">عندك حساب؟ تسجيل الدخول</button>
+        <button class="btn-link btn-link-muted" onclick="App.goToGradeSelect()" data-i18n="welcome_cta_guest">تجربة سريعة بدون حساب</button>
+      </section>
+
+      <!-- SCREEN: register (product redesign — student accounts) -->
+      <section class="screen" data-screen="register" hidden>
+        <div class="hero hero-compact">
+          <p class="eyebrow" data-i18n="register_eyebrow">حساب جديد</p>
+          <h1 data-i18n="register_title">التسجيل يحفظ تقدمك</h1>
+        </div>
+        <form id="registerForm" class="auth-form card">
+          <label class="auth-label" data-i18n="register_name_label">الاسم</label>
+          <input type="text" id="registerName" placeholder="مثال: سارة" autocomplete="name" required>
+          <label class="auth-label" data-i18n="register_email_label">البريد الإلكتروني</label>
+          <input type="email" id="registerEmail" placeholder="name@example.com" autocomplete="email" required>
+          <label class="auth-label" data-i18n="register_password_label">كلمة المرور</label>
+          <input type="password" id="registerPassword" placeholder="8 أحرف على الأقل" autocomplete="new-password" minlength="8" required>
+          <p class="auth-error" id="registerError" hidden></p>
+          <button type="submit" class="btn-primary" data-i18n="register_submit">إنشاء الحساب</button>
+        </form>
+        <button class="btn-link" onclick="App.goToLogin()" data-i18n="register_have_account">عندك حساب؟ تسجيل الدخول</button>
+      </section>
+
+      <!-- SCREEN: login -->
+      <section class="screen" data-screen="login" hidden>
+        <div class="hero hero-compact">
+          <p class="eyebrow" data-i18n="login_eyebrow">مرحبًا بعودتك</p>
+          <h1 data-i18n="login_title">تسجيل الدخول</h1>
+        </div>
+        <form id="loginForm" class="auth-form card">
+          <label class="auth-label" data-i18n="login_email_label">البريد الإلكتروني</label>
+          <input type="email" id="loginEmail" placeholder="name@example.com" autocomplete="email" required>
+          <label class="auth-label" data-i18n="login_password_label">كلمة المرور</label>
+          <input type="password" id="loginPassword" placeholder="كلمة المرور" autocomplete="current-password" required>
+          <p class="auth-error" id="loginError" hidden></p>
+          <button type="submit" class="btn-primary" data-i18n="login_submit">تسجيل الدخول</button>
+        </form>
+        <button class="btn-link" onclick="App.goToRegister()" data-i18n="login_no_account">ما عندك حساب؟ إنشاء حساب جديد</button>
+      </section>
+
+      <!-- SCREEN: current grade (explicit onboarding step — registration itself
+           leaves grade_level unset; this app is scoped to Grade 11/12 Qudrat
+           prep specifically, so this is asked before any goal-setting step). -->
+      <section class="screen" data-screen="grade-select" hidden>
+        <div class="onboarding-progress">
+          <span class="onboarding-progress-seg active"></span>
+          <span class="onboarding-progress-seg"></span>
+          <span class="onboarding-progress-seg"></span>
+        </div>
+        <div class="hero hero-compact">
+          <span class="onboarding-icon" aria-hidden="true">🎓</span>
+          <p class="eyebrow" data-i18n="grade_select_eyebrow">قبل ما نبدأ</p>
+          <h1 data-i18n="grade_select_title">وش صفّك الدراسي؟</h1>
+          <p class="hero-sub" data-i18n="grade_select_sub">يساعدنا نخصّص المحتوى المناسب لك.</p>
+        </div>
+        <div class="path-option-grid">
+          <button type="button" class="path-option" onclick="App.confirmGrade(11)">
+            <span class="path-option-title" data-i18n="grade_select_11">الحادي عشر</span>
+          </button>
+          <button type="button" class="path-option" onclick="App.confirmGrade(12)">
+            <span class="path-option-title" data-i18n="grade_select_12">الثاني عشر</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN: target score (explicit onboarding step — was previously only
+           captured conversationally inside the mission interview chat, which
+           meant a first-time student never saw a clear "this is what we're
+           setting up" moment before the chat began). -->
+      <section class="screen" data-screen="target-score-select" hidden>
+        <div class="onboarding-progress">
+          <span class="onboarding-progress-seg done"></span>
+          <span class="onboarding-progress-seg active"></span>
+          <span class="onboarding-progress-seg"></span>
+        </div>
+        <div class="hero hero-compact">
+          <span class="onboarding-icon" aria-hidden="true">🎯</span>
+          <p class="eyebrow" data-i18n="target_score_eyebrow">قبل ما نبدأ</p>
+          <h1 data-i18n="target_score_title">وش درجتك المستهدفة؟</h1>
+          <p class="hero-sub" data-i18n="target_score_sub">من 100 — نبني خطتك على أساسها.</p>
+        </div>
+        <div class="target-score-picker">
+          <div class="target-score-value" id="targetScoreValue">80</div>
+          <input type="range" id="targetScoreSlider" min="50" max="100" step="1" value="80" oninput="App.onTargetScoreInput(this.value)">
+          <div class="target-score-scale"><span>50</span><span>100</span></div>
+        </div>
+        <button type="button" class="btn-primary" onclick="App.confirmTargetScore()" data-i18n="target_score_cta">متابعة ←</button>
+      </section>
+
+      <!-- SCREEN: exam date -->
+      <section class="screen" data-screen="exam-date-select" hidden>
+        <div class="onboarding-progress">
+          <span class="onboarding-progress-seg done"></span>
+          <span class="onboarding-progress-seg done"></span>
+          <span class="onboarding-progress-seg active"></span>
+        </div>
+        <div class="hero hero-compact">
+          <span class="onboarding-icon" aria-hidden="true">📅</span>
+          <p class="eyebrow" data-i18n="exam_date_eyebrow">خطوة أخيرة</p>
+          <h1 data-i18n="exam_date_title">متى موعد اختبارك؟</h1>
+          <p class="hero-sub" data-i18n="exam_date_sub">يساعدنا نحسب خطة مذاكرة واقعية.</p>
+        </div>
+        <input type="date" id="examDateInput" class="exam-date-input">
+        <button type="button" class="btn-primary" onclick="App.confirmExamDate()" data-i18n="exam_date_cta">متابعة ←</button>
+      </section>
+
+      <!-- SCREEN: mission interview (target score + exam date are already known
+           by this point — see the two screens above — so this chat only needs
+           to nail down the remaining, genuinely conversational details like
+           weekly study hours and target program). -->
+      <section class="screen" data-screen="mission" hidden>
+        <h2 class="screen-title" data-i18n="mission_title">لنتحدث عن هدفك</h2>
+        <p class="screen-sub" data-i18n="mission_sub">كم ساعة بتقدر تذاكر أسبوعيًا؟ وأي تخصص أو كلية بذهنك؟</p>
+
+        <div class="chat" id="missionChat"></div>
+
+        <form id="missionForm" class="input-row">
+          <input type="text" id="missionInput" data-i18n-placeholder="mission_placeholder" placeholder="مثال: أبي كلية طب، باقي شهر ونص على القدرات" autocomplete="off" required>
+          <button type="submit" class="btn-send" aria-label="إرسال">↳</button>
+        </form>
+        <button type="button" class="btn-primary" id="missionContinueBtn" onclick="App.continueFromMission()" hidden>متابعة ←</button>
+      </section>
+
+      <!-- SCREEN: mission transition (onboarding ceremony — was a jarring instant
+           jump straight from the last mission-interview reply into the diagnostic
+           quiz with zero acknowledgement; this gives the handoff real weight). -->
+      <section class="screen" data-screen="mission-transition" hidden>
+        <div class="hero">
+          <img src="/logo.png" alt="" class="transition-logo">
+          <p class="eyebrow" data-i18n="transition_eyebrow">تم حفظ هدفك ✓</p>
+          <h1 data-i18n="transition_title">جاري تجهيز رحلة التعلّم...</h1>
+        </div>
+        <div class="prep-checklist" id="prepChecklist">
+          <div class="prep-step" data-step="mission">
+            <span class="prep-step-icon"></span>
+            <span class="prep-step-text" data-i18n="transition_step_mission">حفظ المهمة</span>
+          </div>
+          <div class="prep-step" data-step="profile">
+            <span class="prep-step-icon"></span>
+            <span class="prep-step-text" data-i18n="transition_step_profile">بناء الملف التعليمي</span>
+          </div>
+          <div class="prep-step" data-step="plan">
+            <span class="prep-step-icon"></span>
+            <span class="prep-step-text" data-i18n="transition_step_plan">تجهيز خطة الدراسة</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN: diagnostic -->
+      <section class="screen" data-screen="diagnostic" hidden>
+        <div class="progress-bar"><div class="progress-fill" id="diagProgressFill"></div></div>
+        <p class="screen-eyebrow" id="diagCounter">سؤال 1 من 12</p>
+        <h2 class="quiz-stem" id="diagStem">—</h2>
+        <div class="options" id="diagOptions"></div>
+        <p class="feedback" id="diagFeedback" hidden></p>
+      </section>
+
+      <!-- SCREEN: diagnostic done -->
+      <section class="screen" data-screen="diagnostic-done" hidden>
+        <div class="hero">
+          <p class="eyebrow" data-i18n="diagnostic_done_eyebrow">التشخيص خلص</p>
+          <h1 id="diagScoreHeadline">—</h1>
+          <p class="hero-sub" id="diagScoreSub">—</p>
+        </div>
+        <button class="btn-primary" onclick="App.goToDashboard()" data-i18n="diagnostic_done_cta">عرض الدرس الأول</button>
+      </section>
+
+      <!-- SCREEN: choose learning path — the student explicitly picks Quantitative
+           or Verbal before any lesson begins; each is its own complete roadmap
+           (own progress ring, own mastery, own practice queue), not one mixed feed. -->
+      <section class="screen" data-screen="path-select" hidden>
+        <div class="hero hero-compact">
+          <p class="eyebrow" data-i18n="path_select_eyebrow">قبل ما نبدأ</p>
+          <h1 data-i18n="path_select_title">اختر مسارك التعليمي</h1>
+          <p class="hero-sub" data-i18n="path_select_sub">كل مسار له رحلته ودروسه وتمارينه الخاصة — تقدر تبدّل لاحقًا من صفحة رحلتك التعليمية.</p>
+        </div>
+        <div class="path-option-grid">
+          <button type="button" class="path-option" data-path="quantitative" onclick="App.choosePath('quantitative')">
+            <span class="path-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9h2M11 9h2M15 9h2M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <span class="path-option-title" data-i18n="path_select_quant_title">الكمّي</span>
+            <span class="path-option-sub" data-i18n="path_select_quant_sub">حساب، جبر، هندسة، نسب ومقارنات</span>
+          </button>
+          <button type="button" class="path-option" data-path="verbal" onclick="App.choosePath('verbal')">
+            <span class="path-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 9h9M7.5 12h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <span class="path-option-title" data-i18n="path_select_verbal_title">اللفظي</span>
+            <span class="path-option-sub" data-i18n="path_select_verbal_sub">تناظر، إكمال جمل، استيعاب مقروء</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN: lesson intro (Version 3 Phase B — a micro-learning stepper,
+           one concept/challenge/example at a time, not a single long scroll) -->
+      <section class="screen" data-screen="lesson-intro" hidden>
+        <div class="zpd-reason-card">
+          <span class="zpd-reason-icon">✦</span>
+          <p class="zpd-reason-text" id="lessonReasonText">—</p>
+        </div>
+        <div class="lesson-header-row">
+          <h2 class="screen-title" id="lessonTitle">—</h2>
+        </div>
+        <span class="lesson-review-badge" id="lessonReviewBadge" hidden data-i18n="lesson_review_badge">✨ محتوى قيد المراجعة</span>
+        <span class="lesson-review-badge lesson-review-badge--verified" id="lessonVerifiedBadge" hidden>✓ محتوى معتمد</span>
+        <div id="lessonVoiceContainer"></div>
+
+        <div class="lesson-level-row">
+          <span class="lesson-level-badge" id="lessonLevelBadge">—</span>
+          <div class="lesson-step-dots" id="lessonStepDots"></div>
+        </div>
+        <div id="lessonStepContainer"></div>
+
+        <div class="lesson-step-nav">
+          <button type="button" class="btn-text" id="lessonSkipBtn" onclick="App.skipToLessonQuiz()">تخطي إلى التدريب ←</button>
+          <button type="button" class="btn-primary" id="lessonNextBtn" onclick="App.goToNextLessonStep()">التالي ←</button>
+        </div>
+
+        <!-- Ask About This Lesson (product redesign): grounded ONLY in this lesson's content -->
+        <div class="ask-lesson-section" id="askLessonSection">
+          <button type="button" class="ask-lesson-toggle" onclick="App.toggleAskAboutLesson()">
+            <span data-i18n="lesson_ask_toggle">💬 اسأل عن هذا الدرس</span>
+            <span id="askLessonChevron">▾</span>
+          </button>
+          <div class="ask-lesson-panel" id="askLessonPanel" hidden>
+            <div class="chat chat-compact" id="askLessonChat"></div>
+            <form id="askLessonForm" class="input-row">
+              <input type="text" id="askLessonInput" data-i18n-placeholder="lesson_ask_placeholder" placeholder="اسألي عن هذا الدرس بالذات..." autocomplete="off" required>
+              <button type="submit" class="btn-send" aria-label="إرسال">↳</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN: lesson quiz -->
+      <section class="screen" data-screen="lesson-quiz" hidden>
+        <div class="progress-bar"><div class="progress-fill" id="lessonProgressFill"></div></div>
+        <div class="quiz-counter-row">
+          <p class="screen-eyebrow" id="lessonCounter">سؤال 1 من 6</p>
+          <span class="learning-mode-badge">وضع التعلّم</span>
+          <span class="learning-timer" id="lessonTimer">⏱ 60</span>
+        </div>
+        <h2 class="quiz-stem" id="lessonStem">—</h2>
+        <div class="options" id="lessonOptions"></div>
+        <button type="button" class="btn-hint" id="lessonHintBtn" onclick="App.requestLessonHint()" data-i18n="lesson_hint_btn">💡 تلميح</button>
+        <div id="lessonHintContainer"></div>
+        <div class="feedback" id="lessonFeedback" hidden></div>
+      </section>
+
+      <!-- SCREEN: lesson result -->
+      <section class="screen" data-screen="lesson-result" hidden>
+        <div class="hero">
+          <div class="celebration-badge" id="celebrationBadge">✨</div>
+          <p class="eyebrow" data-i18n="lesson_result_eyebrow">فحص الإتقان</p>
+          <h1 id="lessonResultHeadline">—</h1>
+          <p class="hero-sub" id="lessonResultSub">—</p>
+        </div>
+        <div id="lessonResultXp"></div>
+        <div id="lessonResultBadges"></div>
+        <div class="profile-section" id="lessonTimingSection" hidden>
+          <p class="profile-section-heading">كم استغرقت في كل مهارة</p>
+          <div id="lessonTimingList"></div>
+        </div>
+        <button class="btn-primary" onclick="App.goToDashboard()" data-i18n="lesson_result_cta">عرض التقدم</button>
+      </section>
+
+      <!-- SCREEN: dashboard (Version 2 Phase 3 — a home screen, not a stats page) -->
+      <section class="screen" data-screen="dashboard" hidden>
+
+        <!-- 1. HERO -->
+        <div class="home-hero">
+          <div class="home-hero-top">
+            <div class="home-hero-avatar" id="heroCompanionAvatar" aria-hidden="true"></div>
+            <div class="home-hero-text">
+              <p class="home-hero-greeting" id="dashboardWelcome">—</p>
+              <p class="home-hero-sub" id="dashboardMotivation">—</p>
+            </div>
+          </div>
+          <div class="home-hero-stats">
+            <div class="home-hero-stat">
+              <span class="home-hero-stat-value" id="heroTarget">—</span>
+              <span class="home-hero-stat-label">الهدف</span>
+            </div>
+            <div class="home-hero-ring-wrap">
+              <svg viewBox="0 0 120 120" class="home-hero-ring" aria-hidden="true">
+                <circle cx="60" cy="60" r="52" class="home-hero-ring-track"/>
+                <circle cx="60" cy="60" r="52" class="home-hero-ring-fill" id="heroRingFill" transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="home-hero-ring-center">
+                <span class="home-hero-ring-value" id="heroCurrent">—</span>
+                <span class="home-hero-ring-label">الآن</span>
+              </div>
+            </div>
+            <div class="home-hero-stat">
+              <span class="home-hero-stat-value" id="heroDays">—</span>
+              <span class="home-hero-stat-label">يوم متبقٍ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. CONTINUE LEARNING -->
+        <div class="continue-card" id="continueCard" onclick="App.loadNextLesson()">
+          <div class="continue-card-row">
+            <div class="continue-card-icon" id="continueCardIcon">📘</div>
+            <div class="continue-card-body">
+              <span class="continue-card-eyebrow" data-i18n="continue_card_eyebrow">تابع التعلّم</span>
+              <h3 class="continue-card-title" id="continueCardTitle">جاري التحضير...</h3>
+              <div class="continue-card-meta">
+                <span id="continueCardDuration">—</span>
+                <span id="continueCardTier">—</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="continue-card-btn" id="continueCardBtn" data-i18n="continue_card_btn">ابدأ ←</button>
+        </div>
+
+        <!-- 3. LEARNING JOURNEY -->
+        <div class="journey-section">
+          <div class="journey-section-head">
+            <h3 class="section-heading" data-i18n="dashboard_journey_title">رحلتك التعليمية</h3>
+            <button type="button" class="journey-full-link" onclick="App.goToJourney()">عرض المسار الكامل ←</button>
+          </div>
+          <div class="journey-track" id="journeyTrack"></div>
+        </div>
+
+        <!-- 4. TODAY'S MISSION -->
+        <div class="mission-card">
+          <div class="mission-card-head">
+            <h3 class="section-heading" data-i18n="dashboard_mission_title">مهمة اليوم</h3>
+            <span class="mission-percent" id="missionPercent">0%</span>
+          </div>
+          <div class="mission-progress-track"><div class="mission-progress-fill" id="missionProgressFill"></div></div>
+          <ul class="mission-list" id="missionList"></ul>
+        </div>
+
+        <!-- 5. COMPANION CARD -->
+        <div id="companionCardContainer"></div>
+
+        <!-- Gamification (product redesign): XP/level + streak, backed by GET /api/profile -->
+        <div class="stat-cards-row">
+          <div id="xpCardContainer"></div>
+          <div id="streakCardContainer"></div>
+        </div>
+
+        <!-- 6. ACHIEVEMENTS -->
+        <div class="profile-section" id="achievementsSection" hidden>
+          <p class="profile-section-heading" data-i18n="dashboard_achievements">إنجازاتك</p>
+          <div class="achievements-grid" id="achievementsList"></div>
+        </div>
+
+        <!-- 7. SKILL PROGRESS -->
+        <div class="profile-section" id="skillProgressSection" hidden>
+          <p class="profile-section-heading" data-i18n="dashboard_skill_progress_title">مستوى الإتقان</p>
+          <div id="skillProgressList"></div>
+        </div>
+
+        <!-- 10. UPCOMING -->
+        <div class="profile-section" id="upcomingSection" hidden>
+          <p class="profile-section-heading" data-i18n="dashboard_upcoming_title">القادم</p>
+          <div id="upcomingList"></div>
+        </div>
+
+        <div class="profile-section" id="recentActivitySection" hidden>
+          <p class="profile-section-heading" data-i18n="dashboard_recent_activity">نشاطك الأخير</p>
+          <div id="recentActivityList"></div>
+        </div>
+      </section>
+
+      <!-- SCREEN: full curriculum journey (Version 3 Phase D) — two SEPARATE
+           roadmaps (Quantitative / Verbal), not one flat skill list. Reuses
+           the exact Cards.JourneyNode component already built for the
+           dashboard's compact preview, just laid out as a full wrapping grid
+           instead of a horizontal scroller. -->
+      <section class="screen" data-screen="journey" hidden>
+        <h2 class="screen-title">رحلتك التعليمية</h2>
+        <div class="journey-tabs">
+          <button type="button" class="journey-tab" data-section="quantitative" onclick="App.selectJourneySection('quantitative')">الكمّي</button>
+          <button type="button" class="journey-tab" data-section="verbal" onclick="App.selectJourneySection('verbal')">اللفظي</button>
+        </div>
+        <p class="journey-summary" id="journeySummary">—</p>
+        <div class="journey-progress-track"><div class="journey-progress-fill" id="journeySectionProgressFill"></div></div>
+        <div class="journey-full-track" id="journeyFullTrack"></div>
+        <!-- Explicit switch, not a side effect of merely browsing a tab — tapping
+             a tab above only changes what you're LOOKING at; this is the one
+             action that actually commits this section as the active learning path. -->
+        <button type="button" class="btn-primary journey-switch-path-btn" id="journeySwitchPathBtn" onclick="App.choosePath(App.getJourneySection())">ابدأ درسًا في هذا المسار ←</button>
+      </section>
+
+      <!-- SCREEN: notifications (product redesign) -->
+      <section class="screen" data-screen="notifications" hidden>
+        <h2 class="screen-title" data-i18n="notifications_title">الإشعارات</h2>
+        <div class="empty-state" id="notificationsEmptyNote" hidden>
+          <span class="empty-state-icon">🔔</span>
+          <p class="empty-state-text" data-i18n="notifications_empty">ما فيه إشعارات جديدة الآن.</p>
+        </div>
+        <div id="notificationsList"></div>
+      </section>
+
+      <!-- SCREEN: ask the teacher -->
+      <section class="screen" data-screen="ask-teacher" hidden>
+        <h2 class="screen-title" data-i18n="ask_teacher_title">اسأل المعلم</h2>
+        <p class="screen-sub" data-i18n="ask_teacher_sub">أي سؤال متابعة عندك على أي درس؟</p>
+        <div class="chat" id="askTeacherChat"></div>
+        <form id="askTeacherForm" class="input-row">
+          <input type="text" id="askTeacherInput" data-i18n-placeholder="ask_teacher_placeholder" placeholder="السؤال هنا..." autocomplete="off" required>
+          <button type="submit" class="btn-send" aria-label="إرسال">↳</button>
+        </form>
+      </section>
+
+      <!-- SCREEN: resources -->
+      <section class="screen" data-screen="resources" hidden>
+        <p class="screen-eyebrow" data-i18n="resources_eyebrow">مصادر معتمدة</p>
+        <h2 class="screen-title" data-i18n="resources_title">من أين نتحقق</h2>
+        <div id="resourcesList"></div>
+      </section>
+
+      <!-- SCREEN: glossary -->
+      <section class="screen" data-screen="glossary" hidden>
+        <p class="screen-eyebrow" data-i18n="glossary_eyebrow">مصطلحاتك</p>
+        <h2 class="screen-title" data-i18n="glossary_title">قاموسي</h2>
+        <div class="empty-state" id="glossaryEmptyNote" hidden>
+          <span class="empty-state-icon">📖</span>
+          <p class="empty-state-text" data-i18n="glossary_empty">ما فيه مصطلحات مفتوحة بعد — تفتح تلقائيًا بعد إتقان أول مهارة.</p>
+        </div>
+        <div id="glossaryList"></div>
+      </section>
+
+      <!-- SCREEN: reference sheets -->
+      <section class="screen" data-screen="reference-sheets" hidden>
+        <p class="screen-eyebrow" data-i18n="reference_eyebrow">تكبر مع تعلّمك</p>
+        <h2 class="screen-title" data-i18n="reference_title">أوراقي المرجعية</h2>
+        <div class="empty-state" id="referenceSheetsEmptyNote" hidden>
+          <span class="empty-state-icon">📄</span>
+          <p class="empty-state-text" data-i18n="reference_empty">ما فيه أوراق مرجعية بعد — تظهر تلقائيًا بعد إتقان أول مهارة بكل موضوع.</p>
+        </div>
+        <div id="referenceSheetsList"></div>
+      </section>
+
+      <!-- SCREEN: practice queue -->
+      <section class="screen" data-screen="practice" hidden>
+        <p class="screen-eyebrow" data-i18n="practice_eyebrow">مراجعة متباعدة</p>
+        <h2 class="screen-title" data-i18n="practice_title">مراجعة اليوم</h2>
+        <div class="empty-state" id="practiceEmptyNote" hidden>
+          <span class="empty-state-icon">✅</span>
+          <p class="empty-state-text" data-i18n="practice_empty">ما فيه شي مستحق اليوم — المراجعة المتباعدة تجدول أول مراجعة لأي مهارة "بكرة" وليس نفس يوم التعلم (هذا مبدأ علمي أساسي، مو نقص بالنظام). الرجاء المحاولة مرة أخرى غدًا.</p>
+        </div>
+        <div id="practiceQuizArea"></div>
+      </section>
+
+      <!-- SCREEN: settings (language + gender-address preference, changeable anytime) -->
+      <section class="screen" data-screen="settings" hidden>
+        <h2 class="screen-title" data-i18n="settings_title">الإعدادات</h2>
+
+        <p class="profile-section-heading" data-i18n="settings_language">لغة الواجهة</p>
+        <div class="lang-option-grid" id="settingsLangGrid">
+          <button type="button" class="lang-option" data-lang="ar" onclick="App.selectLanguage('ar')">
+            <span class="lang-option-flag lang-option-flag-ar">ع</span>
+            <span data-i18n="lang_option_ar">العربية</span>
+          </button>
+          <button type="button" class="lang-option" data-lang="en" onclick="App.selectLanguage('en')">
+            <span class="lang-option-flag lang-option-flag-en">A</span>
+            <span data-i18n="lang_option_en">English</span>
+          </button>
+        </div>
+
+        <p class="profile-section-heading" data-i18n="settings_gender">طريقة المخاطبة</p>
+        <div class="gender-option-grid" id="settingsGenderGrid">
+          <button type="button" class="gender-option" data-gender="male" onclick="App.selectGender('male')" data-i18n="gender_male">ذكر</button>
+          <button type="button" class="gender-option" data-gender="female" onclick="App.selectGender('female')" data-i18n="gender_female">أنثى</button>
+        </div>
+        <button class="btn-link" onclick="App.selectGender('unspecified')" data-i18n="gender_skip">أفضّل عدم التحديد</button>
+
+        <!-- Version 5 Phase L: account management, scoped to change-password only. -->
+        <p class="profile-section-heading">تغيير كلمة المرور</p>
+        <form id="changePasswordForm" class="settings-password-form">
+          <input type="password" id="currentPasswordInput" placeholder="كلمة المرور الحالية" autocomplete="current-password" required>
+          <input type="password" id="newPasswordInput" placeholder="كلمة المرور الجديدة (8 أحرف على الأقل)" autocomplete="new-password" minlength="8" required>
+          <p class="settings-password-message" id="changePasswordMessage" hidden></p>
+          <button type="submit" class="btn-primary">تحديث كلمة المرور</button>
+        </form>
+      </section>
+
+      <!-- SCREEN: mock exam intro -->
+      <section class="screen" data-screen="mock-exam-intro" hidden>
+        <div class="hero">
+          <svg viewBox="0 0 24 24" fill="none" class="hero-icon" aria-hidden="true">
+            <circle cx="12" cy="13" r="8.5" stroke="#197998" stroke-width="1.6"/>
+            <path d="M12 8.5V13l3 2" stroke="#12213B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 2.5h6M12 5v-2.5" stroke="#12213B" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span class="simulation-mode-badge">⏱ وضع المحاكاة</span>
+          <p class="eyebrow" data-i18n="mock_exam_eyebrow">اختبار تجريبي كامل</p>
+          <h1 data-i18n="mock_exam_title">وقت اختبار النفس؟</h1>
+          <p class="hero-sub" id="mockExamIntroSub" data-i18n="mock_exam_sub">اختبار مؤقّت يحاكي تجربة القدرات الحقيقية — يُرجى عدم إغلاق المتصفح أثناءه.</p>
+        </div>
+        <button class="btn-primary" onclick="App.beginMockExam()" data-i18n="mock_exam_cta">البدء الآن</button>
+      </section>
+
+      <!-- SCREEN: mock exam quiz (Version 3 Phase C: "Simulation Mode" —
+           already had strict whole-session timing + no hints + auto-advance;
+           this phase names/labels that existing behavior, doesn't rebuild it) -->
+      <section class="screen" data-screen="mock-exam-quiz" hidden>
+        <div class="exam-header">
+          <span class="simulation-mode-badge">وضع المحاكاة</span>
+          <span class="exam-timer" id="examTimer">--:--</span>
+          <span class="exam-counter" id="examCounter">1 / 20</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="examProgressFill"></div></div>
+        <h2 class="quiz-stem" id="examStem">—</h2>
+        <div class="options" id="examOptions"></div>
+      </section>
+
+      <!-- SCREEN: mock exam review -->
+      <section class="screen" data-screen="mock-exam-review" hidden>
+        <div class="hero">
+          <p class="eyebrow" data-i18n="mock_exam_review_eyebrow">نتيجة الاختبار التجريبي</p>
+          <h1 id="examScoreHeadline">—</h1>
+          <p class="hero-sub" data-i18n="mock_exam_review_sub">مراجعة كل سؤال أدناه</p>
+        </div>
+        <div class="profile-section" id="examTimingSection" hidden>
+          <p class="profile-section-heading">متوسط الوقت لكل مهارة</p>
+          <div id="examTimingList"></div>
+        </div>
+        <div id="examReviewList" class="review-list"></div>
+        <button class="btn-primary" onclick="App.goToDashboard()" data-i18n="mock_exam_review_cta">رجوع للتقدم</button>
+      </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION (shown once the student is past onboarding) -->
+    <nav class="bottom-nav" id="bottomNav" hidden>
+      <button class="nav-item" data-nav="dashboard" onclick="App.goToDashboard()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav_home">الرئيسية</span>
+      </button>
+      <button class="nav-item" data-nav="practice" onclick="App.goToPracticeQueue()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66M17 4v3h-3M7 20v-3h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav_practice">مراجعة</span>
+        <span id="practiceBadge" class="nav-badge" hidden></span>
+      </button>
+      <button class="nav-item" data-nav="mock-exam-intro" onclick="App.startMockExam()">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="7.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 9.5V13l2.5 1.5M9 3h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span data-i18n="nav_exam">اختبار</span>
+      </button>
+      <button class="nav-item" data-nav="ask-teacher" onclick="App.goToAskTeacher()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav_ask">اسأل</span>
+      </button>
+      <button class="nav-item" data-nav="more" onclick="App.toggleMoreSheet()">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>
+        <span data-i18n="nav_more">المزيد</span>
+      </button>
+    </nav>
+
+    <!-- MORE SHEET -->
+    <div class="more-sheet-backdrop" id="moreSheetBackdrop" hidden onclick="App.toggleMoreSheet()"></div>
+    <div class="more-sheet" id="moreSheet" hidden>
+      <div class="more-sheet-handle"></div>
+      <button class="more-sheet-item" onclick="App.goToReferenceSheets(); App.toggleMoreSheet()">
+        <span class="more-sheet-icon">📄</span> <span data-i18n="more_reference">أوراقي المرجعية</span>
+      </button>
+      <button class="more-sheet-item" onclick="App.goToGlossary(); App.toggleMoreSheet()">
+        <span class="more-sheet-icon">📖</span> <span data-i18n="more_glossary">قاموسي</span>
+      </button>
+      <button class="more-sheet-item" onclick="App.goToResources(); App.toggleMoreSheet()">
+        <span class="more-sheet-icon">🔗</span> <span data-i18n="more_resources">مصادر موثوقة</span>
+      </button>
+      <button class="more-sheet-item" onclick="App.goToSettings(); App.toggleMoreSheet()">
+        <span class="more-sheet-icon">⚙️</span> <span data-i18n="more_settings">الإعدادات</span>
+      </button>
+      <button class="more-sheet-item more-sheet-item-danger" id="logoutMenuItem" hidden onclick="App.logout(); App.toggleMoreSheet()">
+        <span class="more-sheet-icon">🔒</span> <span data-i18n="more_logout">تسجيل الخروج</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="/i18n.js"></script>
+  <script src="/visuals.js"></script>
+  <script src="/cards.js"></script>
+  <script src="/voice.js"></script>
+  <script src="/companion.js"></script>
+  <script src="/lesson-renderer.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
