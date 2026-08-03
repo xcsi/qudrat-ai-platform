@@ -1,0 +1,25 @@
+{
+  "name": "qudrat-pedagogy-engine",
+  "version": "0.1.0",
+  "description": "Qudrat AI Tutor — Phase 1 Pedagogy Engine (mission interview, diagnostic, ZPD selector, lesson generator, learning-record writer). No UI by design — see brief §4 Phase 1.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "harness": "tsx src/harness/runTestHarness.ts",
+    "verify-progression": "tsx src/harness/verifyProgression.ts",
+    "test-db": "tsx src/harness/testDbConnection.ts",
+    "author-golden-lesson": "tsx src/harness/authorGoldenLesson.ts",
+    "web": "tsx src/server/httpServer.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.11.0"
+  }
+}

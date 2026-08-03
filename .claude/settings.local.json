@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:qiyas.sa)",
+      "Bash(start *)",
+      "PowerShell($path = \\(Resolve-Path \"lessons\\\\0002-exponents-critical-values.html\"\\).Path; try { code $path } catch {}; Start-Process $path)",
+      "PowerShell($path = \\(Resolve-Path \"lessons\\\\0003-linear-quadratic-equations.html\"\\).Path; try { code $path } catch {}; Start-Process $path)"
+    ]
+  }
+}
