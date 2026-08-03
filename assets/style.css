@@ -1,0 +1,214 @@
+/* Shared stylesheet for the Qudrat quantitative teaching workspace. RTL-first, Arabic typography, print-friendly. */
+
+:root {
+  --bg: #fbfaf7;
+  --bg-card: #ffffff;
+  --ink: #1c1a17;
+  --ink-soft: #55504a;
+  --line: #e4ded3;
+  --accent: #0f6e5c;
+  --accent-soft: #e4f2ee;
+  --warn: #9a5b12;
+  --warn-soft: #fbf0e0;
+  --bad: #9c2b2b;
+  --bad-soft: #fbe9e9;
+  --good: #1c7a3f;
+  --good-soft: #e9f7ee;
+  --code-bg: #f1efe9;
+  --serif: "Amiri", "Traditional Arabic", "Segoe UI", Tahoma, sans-serif;
+  --sans: "Segoe UI", Tahoma, "Dubai", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181a;
+    --bg-card: #1f2123;
+    --ink: #ecebe7;
+    --ink-soft: #b5b0a6;
+    --line: #34363a;
+    --accent: #4fd1ae;
+    --accent-soft: #16302a;
+    --warn: #e0a34d;
+    --warn-soft: #362a16;
+    --bad: #e08080;
+    --bad-soft: #3a1f1f;
+    --good: #7ddb9c;
+    --good-soft: #17301f;
+    --code-bg: #26282b;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { direction: rtl; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 18px;
+  line-height: 1.9;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+h1, h2, h3 {
+  font-family: var(--sans);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+h1 { font-size: 1.9rem; margin-bottom: 0.3rem; }
+h2 { font-size: 1.35rem; margin-top: 2.4rem; border-bottom: 2px solid var(--line); padding-bottom: 0.3rem; }
+h3 { font-size: 1.1rem; margin-top: 1.6rem; }
+
+p { margin: 0.9rem 0; }
+
+.kicker {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.subtitle { color: var(--ink-soft); font-size: 1.05rem; margin-top: 0; }
+
+.lesson-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 0.6rem 0;
+  margin: 1.2rem 0 2rem;
+}
+
+.callout {
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 1.4rem 0;
+  border: 1px solid var(--line);
+}
+.callout.tip { background: var(--accent-soft); border-color: var(--accent); }
+.callout.warn { background: var(--warn-soft); border-color: var(--warn); }
+.callout.tip strong, .callout.warn strong { display: block; margin-bottom: 0.3rem; }
+
+.formula, code {
+  font-family: "Cambria Math", "Consolas", monospace;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 0.1rem 0.4rem;
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline-block;
+}
+
+.formula-block {
+  font-family: "Cambria Math", "Consolas", monospace;
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  margin: 1rem 0;
+  direction: ltr;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+  font-size: 0.95rem;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.7rem;
+  text-align: center;
+}
+th { background: var(--code-bg); }
+
+.q-block {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.3rem 1.4rem;
+  margin: 1.4rem 0;
+}
+.q-number {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+.q-prompt { margin-bottom: 0.9rem; font-weight: 600; }
+
+.q-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.q-option {
+  display: block;
+  width: 100%;
+  text-align: right;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.q-option:hover { border-color: var(--accent); }
+.q-option.correct { background: var(--good-soft); border-color: var(--good); font-weight: 700; }
+.q-option.incorrect { background: var(--bad-soft); border-color: var(--bad); }
+.q-option[disabled] { cursor: default; }
+
+.q-feedback {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--line);
+  font-size: 0.95rem;
+  display: none;
+}
+.q-feedback.shown { display: block; }
+.q-feedback .verdict { font-weight: 700; margin-bottom: 0.4rem; }
+.q-feedback .verdict.good { color: var(--good); }
+.q-feedback .verdict.bad { color: var(--bad); }
+
+footer.lesson-nav {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.95rem;
+}
+footer.lesson-nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
+footer.lesson-nav a:hover { text-decoration: underline; }
+
+.ask-agent {
+  margin-top: 2.5rem;
+  padding: 1rem 1.2rem;
+  background: var(--code-bg);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+a { color: var(--accent); }
+.source-link { font-size: 0.85rem; color: var(--ink-soft); }
+
+@media print {
+  body { max-width: 100%; padding: 0; font-size: 12pt; }
+  .q-option, .ask-agent { display: none !important; }
+  .callout, .card, .q-block { break-inside: avoid; }
+}

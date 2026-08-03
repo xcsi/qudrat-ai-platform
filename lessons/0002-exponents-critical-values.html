@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>الأسس: كيف تتغيّر النتائج حسب قيمة المتغيّر</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="kicker">الدرس 0002 · القدرات الكمي</div>
+<h1>الأسس: كيف تتغيّر النتائج حسب قيمة المتغيّر</h1>
+<p class="subtitle">في درس المقارنات، سؤال (x³ مقابل x²) كان الأصعب عليك رغم إجابتك الصحيحة عنه — هذا الدرس يثبّت تلك المهارة ويوسّعها إلى قواعد الأسس كاملة.</p>
+
+<div class="lesson-meta">
+  <span>⏱ ١٥–٢٠ دقيقة</span>
+  <span>🎯 الهدف: تطبيق قواعد الأسس والتنبؤ بسلوك المتغيّر دون حساب كامل</span>
+  <span>📈 يرتبط بالمهمة: موضوع "الأسس والجذور" ضمن محتوى الجبر (٪٢٣ من الاختبار تقريبًا)</span>
+</div>
+
+<p>
+في الدرس الماضي أتقنتَ خمسة من خمسة أسئلة في المقارنات الكمية. السؤال الوحيد الذي وصفتَه بالأصعب كان مقارنة <strong>x³</strong> بـ <strong>x²</strong> بلا أي قيد على x.
+هذا ليس صدفة: أغلب أخطاء الطلاب في القدرات تأتي من افتراض أن "الأس الأكبر يعطي دائمًا نتيجة أكبر" — وهذا صحيح أحيانًا فقط.
+</p>
+
+<div class="callout tip">
+<strong>القاعدة الذهبية</strong>
+سلوك <code>xⁿ</code> يعتمد كليًا على أين تقع x على خط الأعداد، لا على قيمة n وحدها. لا تحكم أبدًا قبل أن تسأل: "هل x أكبر من 1، أم بين 0 و1، أم صفر، أم سالبة؟"
+</div>
+
+<h2>قواعد الأسس الأساسية — راجعها بسرعة</h2>
+<table>
+<tr><th>القاعدة</th><th>الصيغة</th></tr>
+<tr><td>ضرب أسس بنفس الأساس</td><td><code>aᵐ × aⁿ = aᵐ⁺ⁿ</code></td></tr>
+<tr><td>قسمة أسس بنفس الأساس</td><td><code>aᵐ ÷ aⁿ = aᵐ⁻ⁿ</code></td></tr>
+<tr><td>أس على أس</td><td><code>(aᵐ)ⁿ = aᵐⁿ</code></td></tr>
+<tr><td>الأس صفر</td><td><code>a⁰ = 1</code> (لأي a ≠ 0)</td></tr>
+<tr><td>الأس السالب</td><td><code>a⁻ⁿ = 1 / aⁿ</code></td></tr>
+<tr><td>الأس الكسري</td><td><code>a^(1/n) = ⁿ√a</code></td></tr>
+</table>
+
+<h2>الجدول الحاسم: أربع مناطق لسلوك xⁿ</h2>
+<p>احفظ هذا الجدول كما حفظت خيارات المقارنات الكمية — فهو يحل معظم أسئلة الأسس دون أي حساب:</p>
+
+<table>
+<tr><th>موقع x</th><th>عند رفع الأس (n يكبر، n &gt; 1)</th><th>مثال</th></tr>
+<tr><td>x &gt; 1</td><td>القيمة <strong>تكبر</strong> كلما كبر الأس</td><td>2³ = 8 &gt; 2² = 4</td></tr>
+<tr><td>x = 1</td><td>القيمة <strong>تبقى 1</strong> دائمًا</td><td>1³ = 1² = 1</td></tr>
+<tr><td>0 &lt; x &lt; 1</td><td>القيمة <strong>تصغر</strong> كلما كبر الأس</td><td>(0.5)³ = 0.125 &lt; (0.5)² = 0.25</td></tr>
+<tr><td>x = 0</td><td>القيمة <strong>تبقى صفرًا</strong> (لأي أس موجب)</td><td>0³ = 0² = 0</td></tr>
+<tr><td>x &lt; 0</td><td>تعتمد على <strong>زوجية الأس</strong>: أس فردي يحافظ على السالب، أس زوجي يجعلها موجبة</td><td>(−2)³ = −8 &nbsp;لكن&nbsp; (−2)² = 4</td></tr>
+</table>
+
+<div class="formula-block">لماذا كان x³ مقابل x² "لا يمكن تحديده"؟<br>
+x = 2 ⇒ 8 مقابل 4 (أ أكبر) &nbsp;|&nbsp; x = 0.5 ⇒ 0.125 مقابل 0.25 (ب أكبر) &nbsp;|&nbsp; x = −1 ⇒ −1 مقابل 1 (ب أكبر)<br>
+ثلاث مناطق مختلفة ⇒ ثلاث نتائج مختلفة ⇒ الإجابة "لا يمكن التحديد".
+</div>
+
+<h2>خطوات الحل الموصى بها لأي سؤال أسس فيه متغيّر</h2>
+<ol>
+<li>حدّد: هل هناك قيد على المتغيّر (موجب؟ صحيح؟ أكبر من واحد؟) أم لا يوجد أي قيد؟</li>
+<li>إن لم يوجد قيد، اعبر بذهنك على الجدول الحاسم أعلاه: جرّب منطقة واحدة على الأقل من كل نوع مختلف (أكبر من 1، بين 0 و1، سالب).</li>
+<li>إن تغيّرت النتيجة بين منطقة وأخرى ⇒ الإجابة "لا يمكن التحديد" (في المقارنات) أو "غير كافٍ" (في مسائل كفاية المعطيات).</li>
+<li>إن وُجد قيد صريح (مثل "x عدد صحيح موجب أكبر من 1")، طبّق القاعدة المناسبة لتلك المنطقة فقط دون تجربة الباقي.</li>
+</ol>
+
+<h2>استراتيجيات القدرات</h2>
+<div class="callout tip">
+<strong>اختصار ذهني: الأساس الكسري ينعكس</strong>
+كل رقم بين 0 و1 "ينعكس سلوكه" — كلما زاد الأس صغرت القيمة. هذا يناقض الحدس المكتسب من الأرقام الصحيحة، فتنبّه له كلما رأيت كسرًا أو عددًا عشريًا كأساس.
+</div>
+<div class="callout tip">
+<strong>لا تُفكك الأساس المركّب قبل التبسيط</strong>
+في تعبير مثل <code>(x²y³)² </code>، وزّع الأس على كل عامل أولًا: <code>x⁴y⁶</code>، ثم قارن أو عوّض. توزيع الأس قبل التعويض يقلل احتمال الخطأ الحسابي.
+</div>
+
+<h2>الأخطاء الشائعة</h2>
+<div class="callout warn">
+<strong>ثلاثة أخطاء متكررة</strong>
+(١) افتراض أن "أس أكبر = قيمة أكبر" دائمًا، متجاهلًا أن هذا ينقلب عندما يكون الأساس بين 0 و1 أو سالبًا.<br>
+(٢) الخلط بين <code>−x²</code> و<code>(−x)²</code>: الأولى دائمًا سالبة أو صفر (الأس يُطبَّق على x فقط ثم تُضاف الإشارة)، والثانية دائمًا موجبة أو صفر.<br>
+(٣) نسيان أن الأس الزوجي "يمحو" إشارة الأساس السالب، فيظن الطالب أن الناتج سالب فيقع في فخ متعمّد من واضعي الأسئلة.
+</div>
+
+<h2>تدرّب الآن</h2>
+<p>اختر إجابتك لكل سؤال، وستحصل على تصحيح فوري مع شرح.</p>
+
+<div class="q-block" data-correct="C" data-explain="<p>−3 عدد سالب والأس زوجي (2)، فالأس الزوجي يمحو الإشارة السالبة: (−3)² = 9. الإجابة الصحيحة هي 9، لا −9 ولا −6.</p>">
+  <div class="q-number">سؤال ١</div>
+  <div class="q-prompt">ما ناتج (−3)²؟</div>
+  <div class="q-options">
+    <button class="q-option" data-key="A">−9</button>
+    <button class="q-option" data-key="B">−6</button>
+    <button class="q-option" data-key="C">9</button>
+    <button class="q-option" data-key="D">6</button>
+  </div>
+  <div class="q-feedback"></div>
+</div>
+
+<div class="q-block" data-correct="B" data-explain="<p>−x² تعني −(x²)، أي نطبّق الأس على x أولًا ثم نضع إشارة سالبة. بما أن x² لا يمكن أن تكون سالبة، فإن −x² لا يمكن أن تكون موجبة أبدًا — إما سالبة أو صفر (عندما x = 0).</p>">
+  <div class="q-number">سؤال ٢</div>
+  <div class="q-prompt">أي العبارات التالية صحيحة دائمًا عن −x² (لأي عدد حقيقي x)؟</div>
+  <div class="q-options">
+    <button class="q-option" data-key="A">دائمًا موجبة</button>
+    <button class="q-option" data-key="B">دائمًا سالبة أو صفر</button>
+    <button class="q-option" data-key="C">دائمًا موجبة أو صفر</button>
+    <button class="q-option" data-key="D">لا يمكن تحديد الإشارة إطلاقًا</button>
+  </div>
+  <div class="q-feedback"></div>
+</div>
+
+<div class="q-block" data-correct="D" data-explain="<p>جرّب x = 2: x⁴ = 16 أكبر من x³ = 8 (منطقة x أكبر من 1). جرّب x = 0.5: x⁴ = 0.0625 أصغر من x³ = 0.125 (منطقة الكسر بين 0 و1). النتيجة تغيّرت بين المنطقتين ⇒ لا يمكن التحديد بلا قيد على x.</p>">
+  <div class="q-number">سؤال ٣</div>
+  <div class="q-prompt">إذا كانت x عددًا حقيقيًا بلا أي قيد، فأي العلاقات التالية بين x⁴ و x³ صحيحة دائمًا؟</div>
+  <div class="q-options">
+    <button class="q-option" data-key="A">x⁴ أكبر من x³ دائمًا</button>
+    <button class="q-option" data-key="B">x³ أكبر من x⁴ دائمًا</button>
+    <button class="q-option" data-key="C">متساويان دائمًا</button>
+    <button class="q-option" data-key="D">لا يمكن تحديد العلاقة بثبات</button>
+  </div>
+  <div class="q-feedback"></div>
+</div>
+
+<div class="q-block" data-correct="A" data-explain="<p>(2³)² = 2⁶ = 64 باستخدام قاعدة 'أس على أس': نضرب الأسين (3×2=6). لا حاجة لحساب 2³=8 ثم تربيعه، رغم أن ذلك يعطي نفس الناتج (8² = 64) — لكن الطريقة المباشرة أسرع في الاختبار.</p>">
+  <div class="q-number">سؤال ٤</div>
+  <div class="q-prompt">ما ناتج (2³)²؟</div>
+  <div class="q-options">
+    <button class="q-option" data-key="A">64</button>
+    <button class="q-option" data-key="B">36</button>
+    <button class="q-option" data-key="C">32</button>
+    <button class="q-option" data-key="D">12</button>
+  </div>
+  <div class="q-feedback"></div>
+</div>
+
+<div class="q-block" data-correct="B" data-explain="<p>0 &lt; 0.2 &lt; 1، ونحن في منطقة الكسر: كلما زاد الأس صغرت القيمة. إذن (0.2)⁵ أصغر من (0.2)³، أي أن العمود (ب) — (0.2)³ — أكبر من العمود (أ). هذا معاكس تمامًا لحدس 'الأس الأكبر = قيمة أكبر'.</p>">
+  <div class="q-number">سؤال ٥ (مقارنة كمية)</div>
+  <div class="q-prompt">العمود (أ): (0.2)⁵ &nbsp;&nbsp;|&nbsp;&nbsp; العمود (ب): (0.2)³</div>
+  <div class="q-options">
+    <button class="q-option" data-key="A">الكمية في العمود (أ) أكبر</button>
+    <button class="q-option" data-key="B">الكمية في العمود (ب) أكبر</button>
+    <button class="q-option" data-key="C">الكميتان متساويتان</button>
+    <button class="q-option" data-key="D">لا يمكن تحديد ذلك من المعطيات المتوفرة</button>
+  </div>
+  <div class="q-feedback"></div>
+</div>
+
+<div class="q-block" data-correct="C" data-explain="<p>وزّع الأس على كل عامل داخل القوس: (x²y³)³ = x^(2×3) × y^(3×3) = x⁶y⁹. الخطأ الشائع هو ضرب الأسين الأصليين ببعضهما (2×3=6 فقط) دون تطبيق نفس القاعدة على y.</p>">
+  <div class="q-number">سؤال ٦</div>
+  <div class="q-prompt">بسّط: (x²y³)³</div>
+  <div class="q-options">
+    <button class="q-option" data-key="A">x⁵y⁶</button>
+    <button class="q-option" data-key="B">x⁶y⁶</button>
+    <button class="q-option" data-key="C">x⁶y⁹</button>
+    <button class="q-option" data-key="D">x⁸y²⁷</button>
+  </div>
+  <div class="q-feedback"></div>
+</div>
+
+<h2>ملخص الدرس</h2>
+<ul>
+<li>سلوك <code>xⁿ</code> يعتمد على أين تقع x: أكبر من 1، تساوي 1، بين 0 و1، تساوي 0، أو سالبة — احفظ الجدول الحاسم.</li>
+<li>عند وجود متغيّر بلا قيد، جرّب أكثر من منطقة قبل أن تحكم — تمامًا كما فعلت في درس المقارنات الكمية.</li>
+<li>ميّز بين <code>−x²</code> (سالبة أو صفر دائمًا) و<code>(−x)²</code> (موجبة أو صفر دائمًا).</li>
+<li>وزّع الأس على كل عامل داخل القوس المركّب قبل أي تبسيط آخر.</li>
+</ul>
+
+<h2>المصدر الأساسي</h2>
+<p class="source-link">
+للتأكد من صيغة أسئلة الأسس والجذور الرسمية وتكرارها الفعلي في الاختبار، راجع
+<a href="https://qiyas.sa/" target="_blank">موقع مركز قياس الرسمي (qiyas.sa)</a>
+وسجّل دخولك لسحب النموذج التجريبي الرسمي.
+</p>
+
+<div class="ask-agent">
+💬 إذا كان أي جزء من هذا الدرس غير واضح، أو أردت أمثلة إضافية، اسألني مباشرة — يمكنني الشرح بطرق مختلفة أو إعطاءك تمارين إضافية فورًا.
+</div>
+
+<footer class="lesson-nav">
+  <span>الدرس السابق: <a href="0001-quantitative-comparisons-intro.html">٠٠٠١ — المقارنات الكمية</a></span>
+  <span>الدرس التالي: <a href="0003-linear-quadratic-equations.html">٠٠٠٣ — المعادلات الخطية والتربيعية</a></span>
+</footer>
+
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
