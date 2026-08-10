@@ -14,6 +14,54 @@
 <body>
 
   <div class="phone">
+    <!-- SIDEBAR NAV — desktop/tablet-landscape app shell (>=1024px). Replaces the
+         bottom nav + more-sheet entirely at that width: same destinations, same
+         onclick handlers, just laid out for a persistent side rail instead of a
+         thumb-reach bottom bar. Hidden by default; shown only via CSS media query,
+         same [hidden] + showScreen() visibility logic as bottomNav (see app.js). -->
+    <nav class="sidebar-nav" id="sidebarNav" hidden>
+      <img src="/logo-white.png" alt="قياسي Qiyasy" class="sidebar-nav-logo">
+      <button class="sidebar-nav-item" data-nav="dashboard" onclick="App.goToDashboard()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav_home">الرئيسية</span>
+      </button>
+      <button class="sidebar-nav-item" data-nav="practice" onclick="App.goToPracticeQueue()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66M17 4v3h-3M7 20v-3h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav_practice">مراجعة</span>
+        <span id="practiceBadgeSidebar" class="sidebar-nav-badge" hidden></span>
+      </button>
+      <button class="sidebar-nav-item" data-nav="mock-exam-intro" onclick="App.startMockExam()">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="7.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 9.5V13l2.5 1.5M9 3h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span data-i18n="nav_exam">اختبار</span>
+      </button>
+      <button class="sidebar-nav-item" data-nav="ask-teacher" onclick="App.goToAskTeacher()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav_ask">اسأل</span>
+      </button>
+      <div class="sidebar-nav-divider"></div>
+      <button class="sidebar-nav-item" data-nav-screen="reference-sheets" onclick="App.goToReferenceSheets()">
+        <span class="sidebar-nav-icon" aria-hidden="true">📄</span>
+        <span data-i18n="more_reference">أوراقي المرجعية</span>
+      </button>
+      <button class="sidebar-nav-item" data-nav-screen="glossary" onclick="App.goToGlossary()">
+        <span class="sidebar-nav-icon" aria-hidden="true">📖</span>
+        <span data-i18n="more_glossary">قاموسي</span>
+      </button>
+      <button class="sidebar-nav-item" data-nav-screen="resources" onclick="App.goToResources()">
+        <span class="sidebar-nav-icon" aria-hidden="true">🔗</span>
+        <span data-i18n="more_resources">مصادر موثوقة</span>
+      </button>
+      <button class="sidebar-nav-item" data-nav-screen="settings" onclick="App.goToSettings()">
+        <span class="sidebar-nav-icon" aria-hidden="true">⚙️</span>
+        <span data-i18n="more_settings">الإعدادات</span>
+      </button>
+      <div class="sidebar-nav-spacer"></div>
+      <button class="sidebar-nav-item sidebar-nav-item-danger" id="sidebarLogoutItem" hidden onclick="App.logout()">
+        <span class="sidebar-nav-icon" aria-hidden="true">🔒</span>
+        <span data-i18n="more_logout">تسجيل الخروج</span>
+      </button>
+    </nav>
+
     <header class="topbar">
       <img src="/logo-white.png" alt="قياسي Qiyasy" class="topbar-logo">
       <button class="topbar-bell" id="notificationBell" onclick="App.goToNotifications()" aria-label="الإشعارات">

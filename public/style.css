@@ -550,10 +550,26 @@ body {
   position: relative;
 }
 
-@media (min-width: 480px) {
+/* Phone-card treatment (rounded, elevated, floating on the dark body) stays
+   scoped to true handheld widths. Above 1024px this whole metaphor is
+   replaced by a real app shell below — a phone card centered in empty space
+   is exactly the "desktop looks like a mobile app" failure mode. */
+@media (min-width: 480px) and (max-width: 1023.98px) {
   body { padding: 24px 0; }
   .phone { min-height: 90vh; border-radius: 28px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
 }
+/* Tablet portrait (e.g. iPad, ~768-1023px): still single-column, but a 430px
+   phone card on a 768px+ canvas reads as tiny and lost — give it real width. */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .phone { max-width: 680px; }
+}
+
+/* The desktop app-shell media query (>=1024px: sidebar, topbar recolor,
+   screen content widths) lives at the very END of this file, not here — it
+   overrides base rules (.topbar, main#app, .sidebar-nav, .screen) that are
+   themselves defined LATER in the cascade than this point, and CSS resolves
+   same-specificity conflicts by source order. Putting it here once silently
+   lost every override to those later base rules. See the bottom of the file. */
 
 .topbar {
   background: var(--ink);
@@ -1235,6 +1251,43 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .upcoming-item-text strong { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-size: var(--text-sm); }
 .upcoming-item-text span { font-size: 12px; color: var(--text-muted); }
 
+/* ---------- desktop dashboard grid (>=1024px, see the app-shell media query
+   near .phone for the sidebar/main split this builds on) ----------
+   Mobile keeps the single stacked column exactly as authored above (hero,
+   continue, journey, mission, companion, stats, achievements, skills,
+   upcoming, recent — in that DOM order). At desktop width the same elements
+   split into two columns WITHOUT touching the DOM: pin each child's
+   grid-column and leave grid-row on auto. Pinning the column alone is NOT
+   enough to get two independent vertical flows — default (sparse) auto-
+   placement advances its row cursor in DOM order regardless of column, so
+   column 2's first item (companion) still gets pushed down to AFTER every
+   row column 1 has used so far instead of sitting beside continue-card
+   (confirmed live: it landed ~320px below where it visually belongs).
+   `grid-auto-flow: dense` is what actually back-fills each column
+   independently. Hidden [hidden] sections (achievements/skills/upcoming/
+   recent, shown only once real data exists) simply occupy no row when
+   absent — no gap left behind.
+   :not([hidden]) is load-bearing, not decoration — this attribute selector's
+   specificity (class+attribute) already outranks the UA [hidden]{display:none}
+   default, so a bare `display: grid` here would render the dashboard even
+   while showScreen() has it hidden (confirmed live: it rendered stacked on
+   top of path-select). Same footgun the splash-screen rule already documents
+   elsewhere in this file — same fix. */
+@media (min-width: 1024px) {
+  .screen[data-screen="dashboard"]:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+    grid-auto-flow: row dense;
+    column-gap: var(--space-7);
+    align-items: start;
+  }
+  .screen[data-screen="dashboard"] > * { grid-column: 1; }
+  .screen[data-screen="dashboard"] > .home-hero { grid-column: 1 / -1; }
+  .screen[data-screen="dashboard"] > #companionCardContainer,
+  .screen[data-screen="dashboard"] > .stat-cards-row,
+  .screen[data-screen="dashboard"] > #upcomingSection { grid-column: 2; }
+}
+
 /* ---------- confetti (milestones — mission complete, badge unlock, level up) ---------- */
 .confetti-piece {
   position: absolute; top: -10px; width: 8px; height: 8px; opacity: 0.9;
@@ -1459,6 +1512,51 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   padding: 0 3px;
 }
 .nav-badge[hidden] { display: none; }
+
+/* ---------- sidebar nav (desktop / tablet-landscape app shell, >=1024px) ----------
+   Same destinations and onclick handlers as .bottom-nav + .more-sheet, laid out
+   for a persistent side rail. display:none by default (mobile); style.css's
+   1024px shell media query is the only place that turns it on — see there for
+   why display:none isn't just [hidden]: both bottomNav and sidebarNav are kept
+   un-hidden by the SAME app.js logic (whichever the media query shows wins). */
+.sidebar-nav {
+  display: none;
+  grid-area: sidebar;
+  flex-direction: column;
+  background: var(--ink);
+  padding: 24px 16px;
+  gap: 3px;
+  overflow-y: auto;
+}
+.sidebar-nav[hidden] { display: none; }
+.sidebar-nav-logo { height: 24px; width: auto; display: block; margin: 4px 10px 28px; }
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; border: none; background: none; cursor: pointer;
+  padding: 11px 12px; border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.72);
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  font-weight: 600; font-size: var(--text-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+  text-align: start;
+  position: relative;
+}
+.sidebar-nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.sidebar-nav-icon { font-size: 16px; width: 20px; flex-shrink: 0; text-align: center; }
+.sidebar-nav-item:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
+.sidebar-nav-item.active { background: rgba(255,255,255,0.16); color: var(--paper); }
+.sidebar-nav-item.active svg { color: var(--teal); }
+.sidebar-nav-badge {
+  margin-inline-start: auto; background: var(--accent); color: white; font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace; min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+.sidebar-nav-badge[hidden] { display: none; }
+.sidebar-nav-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 10px 8px 12px; }
+.sidebar-nav-spacer { flex: 1; }
+.sidebar-nav-item-danger { color: rgba(225,150,145,0.85); }
+.sidebar-nav-item-danger:hover { background: rgba(193,68,59,0.2); color: #fff; }
+.sidebar-nav-item-danger[hidden] { display: none; }
 
 /* ---------- more sheet ---------- */
 .more-sheet-backdrop {
@@ -1702,3 +1800,61 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   color: var(--ink);
 }
 .resource-link { font-size: 12px; color: var(--accent); word-break: break-all; }
+
+/* ============================================================
+   Desktop app shell (tablet-landscape and up, >=1024px).
+   Deliberately placed at the END of this file: it overrides base rules
+   (.topbar, main#app, .sidebar-nav, .screen) that are themselves defined
+   earlier — same-specificity CSS conflicts resolve by source order, so this
+   block must come after everything it overrides or the overrides silently
+   lose. The phone-card metaphor stops entirely here: the sidebar becomes a
+   persistent rail (replacing the bottom nav + more-sheet), main#app fills
+   the remaining width edge-to-edge, and individual screens opt into
+   whatever content width actually suits them (a comfortable reading column
+   for lessons/quizzes, a wide multi-column grid for the dashboard) instead
+   of every screen in the app sharing one mobile-card width.
+   ============================================================ */
+@media (min-width: 1024px) {
+  body { padding: 0; background: var(--paper-dim); }
+  .phone {
+    max-width: none;
+    width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    display: grid;
+    grid-template-columns: 248px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "sidebar topbar" "sidebar main";
+  }
+  .sidebar-nav { display: flex; }
+  .topbar {
+    grid-area: topbar;
+    background: var(--paper);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    padding: 16px 40px;
+  }
+  .topbar-logo { display: none; }
+  .topbar-bell { color: var(--ink); }
+  .topbar-bell-badge { border-color: var(--paper); }
+  main#app { grid-area: main; padding: 40px 48px 64px; overflow-y: auto; }
+  main#app.with-nav { padding-bottom: 64px; }
+  .bottom-nav, .more-sheet, .more-sheet-backdrop { display: none !important; }
+
+  /* Default content width for reading/quiz/list screens — wide enough to
+     breathe, narrow enough to stay readable. Dashboard and journey opt into
+     their own wider treatment above (see the dashboard-grid block near
+     .upcoming-item, and the journey max-width here). */
+  .screen { max-width: 760px; margin-inline: auto; width: 100%; }
+  .screen[data-screen="dashboard"] { max-width: 1180px; }
+  .screen[data-screen="journey"] { max-width: 1000px; }
+
+  /* The companion panel slides up as a bottom sheet spanning the whole app
+     width; at desktop width that would run straight under the sidebar.
+     Confine it to the content column instead. Physical `right` (not a
+     logical inset-inline-*) to match the base rule it overrides — the
+     sidebar grid track sits on the physical-right edge in this RTL layout
+     (grid column 1 = inline-start = right, under dir="rtl"). */
+  .companion-panel-backdrop, .companion-panel { right: 248px; }
+}

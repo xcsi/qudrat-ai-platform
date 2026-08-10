@@ -305,7 +305,15 @@ create table notifications (
     id               uuid primary key default gen_random_uuid(),
     student_id       uuid not null references students(id) on delete cascade,
     type             text not null check (
-        type in ('daily_reminder','exam_reminder','lesson_complete','revision_reminder','streak_reminder')
+        -- Kept in sync by hand with every `type:` literal notificationService.ts
+        -- emits (checkAndCreateReminders' six checks) — three of these
+        -- ('skill_staleness','daily_challenge_ready','timing_trend') were added
+        -- to the service without updating this constraint, so any student whose
+        -- dashboard load reached one of them got a hard 500 on every
+        -- GET /api/dashboard (an uncaught constraint violation crashed the
+        -- whole request). Found live via a real 500 during the responsive audit.
+        type in ('daily_reminder','exam_reminder','lesson_complete','revision_reminder','streak_reminder',
+                 'skill_staleness','daily_challenge_ready','timing_trend')
     ),
     title_ar         text not null,
     body_ar          text not null,

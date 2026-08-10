@@ -232,11 +232,22 @@ const App = (() => {
     const showNav = NAV_SCREENS.includes(name);
     const nav = document.getElementById('bottomNav');
     nav.hidden = !showNav;
+    // Sidebar nav (>=1024px app shell, see style.css) mirrors bottomNav's
+    // visibility exactly — which one is actually ON SCREEN is a pure CSS
+    // media-query decision, not something this function needs to know.
+    document.getElementById('sidebarNav').hidden = !showNav;
     document.getElementById('app').classList.toggle('with-nav', showNav);
 
     const activeKey = NAV_MAP[name];
     document.querySelectorAll('.nav-item').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.nav === activeKey);
+    });
+    // The sidebar's four "more"-sheet destinations (reference sheets, glossary,
+    // resources, settings) get their own row each instead of sharing one
+    // collapsed "more" nav-item — so they need a per-SCREEN active state
+    // (data-nav-screen), separate from NAV_MAP's shared 'more' bucket above.
+    document.querySelectorAll('[data-nav-screen]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.navScreen === name);
     });
   }
 
@@ -383,7 +394,9 @@ const App = (() => {
   }
 
   function updateLogoutMenuVisibility() {
-    document.getElementById('logoutMenuItem').hidden = !getAuthToken();
+    const loggedIn = !!getAuthToken();
+    document.getElementById('logoutMenuItem').hidden = !loggedIn;
+    document.getElementById('sidebarLogoutItem').hidden = !loggedIn;
   }
 
   async function afterAuthSuccess() {
@@ -1551,12 +1564,15 @@ const App = (() => {
     }
     companionCardContainer.appendChild(Companion.renderInlineCard(companionMsg));
 
-    // Bottom-nav "مراجعة" badge — unrelated to any single dashboard section,
-    // stays visible across every screen, so it's kept updated here regardless
-    // of what else changed in this redesign.
-    const navPracticeBadge = document.getElementById('practiceBadge');
-    navPracticeBadge.textContent = d.duePracticeCount;
-    navPracticeBadge.hidden = d.duePracticeCount === 0;
+    // "مراجعة" nav badge — unrelated to any single dashboard section, stays
+    // visible across every screen, so it's kept updated here regardless of
+    // what else changed in this redesign. Bottom-nav and sidebar-nav are two
+    // separate DOM elements (only one is ever visually shown, per CSS
+    // breakpoint), so both copies need the same update.
+    document.querySelectorAll('#practiceBadge, #practiceBadgeSidebar').forEach((navPracticeBadge) => {
+      navPracticeBadge.textContent = d.duePracticeCount;
+      navPracticeBadge.hidden = d.duePracticeCount === 0;
+    });
 
     // ---------- 10. upcoming ----------
     const upcomingListEl = document.getElementById('upcomingList');

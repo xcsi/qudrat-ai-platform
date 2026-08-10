@@ -38,15 +38,29 @@ export class NotificationService {
     await this.store.markNotificationRead(notificationId);
   }
 
-  /** Called once per dashboard/profile load. */
+  /** Called once per dashboard/profile load. Each check is isolated — a
+   *  reminder that fails to write (bad data for one student, a future schema
+   *  drift like the notifications_type_check mismatch this project already
+   *  hit once — see 02-schema.sql) logs and is skipped instead of taking
+   *  down the entire dashboard/profile request for every student. Reminders
+   *  are a nice-to-have layered on top of the dashboard, not something the
+   *  dashboard's own availability should ever depend on. */
   async checkAndCreateReminders(studentId: string, examDate: string | null): Promise<void> {
-    await this.checkRevisionReminder(studentId);
-    await this.checkStreakReminder(studentId);
-    if (examDate) await this.checkExamReminder(studentId, examDate);
-    // Version 5 Phase L additions.
-    await this.checkSkillStaleness(studentId);
-    await this.checkDailyChallengeReady(studentId);
-    await this.checkTimingTrend(studentId);
+    const checks: Array<[string, () => Promise<void>]> = [
+      ['revision', () => this.checkRevisionReminder(studentId)],
+      ['streak', () => this.checkStreakReminder(studentId)],
+      ['exam', () => (examDate ? this.checkExamReminder(studentId, examDate) : Promise.resolve())],
+      ['skill_staleness', () => this.checkSkillStaleness(studentId)],
+      ['daily_challenge', () => this.checkDailyChallengeReady(studentId)],
+      ['timing_trend', () => this.checkTimingTrend(studentId)],
+    ];
+    for (const [label, check] of checks) {
+      try {
+        await check();
+      } catch (err) {
+        console.error(`Reminder check "${label}" failed for student ${studentId} (skipped, dashboard unaffected):`, err);
+      }
+    }
   }
 
   private async checkRevisionReminder(studentId: string): Promise<void> {
