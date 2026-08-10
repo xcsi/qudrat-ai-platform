@@ -52,8 +52,39 @@ export class DiagnosticService {
     return deduped.slice(0, maxItems).map((s) => s.id);
   }
 
+  /**
+   * Resumes the student's existing in-progress diagnostic session if one
+   * exists, instead of always minting a fresh one. Previously this created a
+   * brand-new session every call — harmless for the (cached, per-skill)
+   * item bank itself, but it meant a student who closed the tab mid-
+   * diagnostic and came back lost their place: the old session's `attempts`
+   * rows became orphaned from whatever NEW session id the client fetched
+   * next, so the app had no way to tell "already answered" apart from
+   * "never asked," and reloading always restarted at question 1.
+   * `completed_at is null` is what makes a session "in progress" — set only
+   * by completeDiagnostic(), so this never resumes a session the student
+   * already finished (that correctly starts a new attempt at the whole
+   * diagnostic instead).
+   */
   async startDiagnostic(studentId: string): Promise<Session> {
+    const inProgress = this.store.sessions.find(
+      (s) => s.student_id === studentId && s.session_type === 'diagnostic' && s.completed_at === null
+    );
+    if (inProgress) return inProgress;
     return this.store.createSession({ student_id: studentId, session_type: 'diagnostic', lesson_id: null });
+  }
+
+  /**
+   * Item ids already answered in this session, in the SAME deterministic
+   * order selectDiagnosticSkills always produces for this student (stable
+   * because it's derived purely from skill.base_difficulty/out-degree, not
+   * randomized) — so the client can resume at `answeredItemIds.length`
+   * instead of restarting the quiz at question 1.
+   */
+  getAnsweredItemIds(sessionId: string): Set<string> {
+    return new Set(
+      this.store.attempts.filter((a) => a.session_id === sessionId).map((a) => a.practice_item_id)
+    );
   }
 
   /**

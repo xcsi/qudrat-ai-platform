@@ -745,11 +745,22 @@ const App = (() => {
     showScreen('diagnostic');
     setLoading(true, 'جاري تجهيز أسئلة التشخيص...');
     try {
-      const { sessionId, items } = await api('POST', '/api/diagnostic/start');
+      const { sessionId, items, resumeFromIndex } = await api('POST', '/api/diagnostic/start');
       state.diagnosticSessionId = sessionId;
       state.diagnosticItems = items;
-      state.diagnosticIndex = 0;
-      renderDiagnosticItem();
+      // Returning to an in-progress diagnostic (closed tab, refreshed mid-quiz)
+      // picks up at the first unanswered question instead of restarting —
+      // resumeFromIndex is how many of `items`, in this same server-guaranteed
+      // order, already have a recorded attempt against this session.
+      state.diagnosticIndex = resumeFromIndex ?? 0;
+      if (state.diagnosticIndex >= state.diagnosticItems.length) {
+        // Every item already has an attempt but the session was never marked
+        // complete (e.g. the /complete call dropped mid-flight) — finish it
+        // now rather than rendering a question that doesn't exist.
+        await finishDiagnostic();
+      } else {
+        renderDiagnosticItem();
+      }
     } finally {
       setLoading(false);
     }

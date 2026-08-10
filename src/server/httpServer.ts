@@ -223,7 +223,15 @@ async function handleDiagnosticStart(req: http.IncomingMessage, res: http.Server
     .map((skillId) => store.practiceItems.find((p) => p.skill_id === skillId && p.lesson_id === null && p.validation_status === 'passed'))
     .filter((p): p is NonNullable<typeof p> => !!p)
     .map((p) => ({ id: p.id, stem_ar: p.stem_ar, options: p.options })); // correct_option_index withheld from client
-  sendJson(res, 200, { sessionId: session.id, items });
+  // Resume support: startDiagnostic() above may have returned an EXISTING
+  // in-progress session rather than a new one. `resumeFromIndex` tells the
+  // client how many of `items` (in this same deterministic order) already
+  // have a recorded attempt, so a reload picks up at the next unanswered
+  // question instead of restarting the whole diagnostic at question 1.
+  const answeredIds = diagnosticService.getAnsweredItemIds(session.id);
+  let resumeFromIndex = 0;
+  while (resumeFromIndex < items.length && answeredIds.has(items[resumeFromIndex].id)) resumeFromIndex++;
+  sendJson(res, 200, { sessionId: session.id, items, resumeFromIndex });
 }
 
 async function handleDiagnosticAnswer(req: http.IncomingMessage, res: http.ServerResponse, sessionId: string) {
@@ -546,8 +554,23 @@ async function handleAskTeacher(req: http.IncomingMessage, res: http.ServerRespo
   try {
     const body = await readJsonBody(req);
     const student = await resolveStudentFromRequest(req);
-    const studentMessage = typeof body.message === 'string' ? body.message : '';
-    const conversation = [...(askTeacherConversations.get(student.id) ?? []), { role: 'user' as const, content: studentMessage }];
+    const studentMessage = typeof body.message === 'string' ? body.message.trim() : '';
+    // The client already guards against an empty submit, but this endpoint
+    // has no such guard of its own — found live: one empty-content request
+    // (a stray/malformed call) gets pushed into askTeacherConversations and
+    // sent to Claude, which rejects ANY empty-content message in the array.
+    // Because the empty turn stays in history forever, that one bad request
+    // permanently breaks every future turn for that student, not just the
+    // one that sent it. Reject empty input outright instead of storing it,
+    // and drop any empty entries already sitting in history so a student
+    // whose conversation got into this state recovers on their next message
+    // rather than staying stuck.
+    if (!studentMessage) {
+      sendJson(res, 200, { reply: 'يبدو أن رسالتك وصلت فارغة — اكتبي سؤالك وأكون جاهز أساعدك فورًا.', priorKnowledgeDetected: false });
+      return;
+    }
+    const priorConversation = (askTeacherConversations.get(student.id) ?? []).filter((turn) => turn.content.trim().length > 0);
+    const conversation = [...priorConversation, { role: 'user' as const, content: studentMessage }];
     askTeacherConversations.set(student.id, conversation);
 
     const { replyAr, priorKnowledgeDetected } = await askTeacherService.processTurn(student.id, conversation);

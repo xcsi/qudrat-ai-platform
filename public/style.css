@@ -543,7 +543,20 @@ body {
 .phone {
   width: 100%;
   max-width: 430px;
-  min-height: 100vh;
+  /* `height`, not `min-height` — load-bearing, not a style preference. main#app
+     below is `flex:1; overflow-y: auto`, meant to be the ONLY scrolling region
+     so the topbar/bottom-nav/companion-panel/more-sheet (all absolutely
+     positioned against .phone) stay correctly pinned to the real viewport
+     edges. A flex item's default `min-height: auto` refuses to shrink below
+     its content's natural size, so with only `min-height` on this container
+     (no `height`), .phone silently grew to match content on any screen taller
+     than one viewport (a long dashboard, a lesson) — main#app's overflow-y
+     never engaged, the whole page body-scrolled instead, and anything
+     bottom-anchored (found live: the companion panel) ended up positioned
+     against the bottom of that oversized box, off-screen, instead of the
+     visible viewport bottom. `height: 100vh` gives the flex algorithm a
+     DEFINITE budget so main#app actually absorbs the overflow itself. */
+  height: 100vh;
   background: var(--paper);
   display: flex;
   flex-direction: column;
@@ -556,7 +569,9 @@ body {
    is exactly the "desktop looks like a mobile app" failure mode. */
 @media (min-width: 480px) and (max-width: 1023.98px) {
   body { padding: 24px 0; }
-  .phone { min-height: 90vh; border-radius: 28px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
+  /* height (not min-height) — same reasoning as the base .phone rule above.
+     overflow:hidden here additionally clips to the rounded corners. */
+  .phone { height: 90vh; border-radius: 28px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
 }
 /* Tablet portrait (e.g. iPad, ~768-1023px): still single-column, but a 430px
    phone card on a 768px+ canvas reads as tiny and lost — give it real width. */
@@ -1819,7 +1834,14 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   .phone {
     max-width: none;
     width: 100%;
-    min-height: 100vh;
+    /* height, not min-height — same reasoning as the base .phone rule (see
+       its comment): a CSS Grid track sized `1fr` only gets a definite budget
+       to work with (and therefore only actually constrains main#app's
+       height, letting its own overflow-y:auto engage) when its container's
+       height is definite. `min-height` alone left this grid's height
+       content-driven, so it grew with the page instead of capping at the
+       viewport — same off-screen-companion-panel bug as the flexbox case. */
+    height: 100vh;
     border-radius: 0;
     box-shadow: none;
     display: grid;
