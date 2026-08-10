@@ -138,6 +138,15 @@ export function sanitizeMathText(text: string): string {
     .replace(/(?<!\w)_([^_]+)_(?!\w)/g, '$1')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/^#{1,6}\s*/gm, '')
+    // Some model outputs double-escape their own newlines/tabs inside the JSON
+    // string value (`\\n` instead of `\n`), which JSON.parse leaves as the
+    // literal two-character sequence "\n" rather than a real line break. Restore
+    // those BEFORE the generic backslash strip below, or they collapse into a
+    // bare "n"/"t" glued onto neighboring text (e.g. "التالية:nn«...»") instead
+    // of either a real line break or readable prose.
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, ' ')
+    .replace(/\\r/g, '')
     // Final catch-all: any backslash still remaining at this point is a leftover
     // LaTeX artifact (Arabic math text never legitimately contains one) — strip
     // the backslash but keep whatever character followed it, rather than leaving

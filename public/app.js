@@ -392,8 +392,16 @@ const App = (() => {
     // whether to start the mission interview again or go straight to her dashboard.
     try {
       const d = await api('GET', '/api/dashboard');
-      if (d.target !== null) {
+      if (d.target !== null && d.baseline !== null) {
         goToDashboard();
+        return;
+      }
+      if (d.target !== null) {
+        // Mission interview is done (target score saved) but the diagnostic
+        // never completed — e.g. the student closed the tab or lost connection
+        // mid-quiz. Resume the diagnostic instead of silently dropping into a
+        // dashboard with no real data behind it.
+        startDiagnostic();
         return;
       }
     } catch (err) {
