@@ -94,6 +94,12 @@ const I18N = (() => {
       mission_title: 'لنتحدث عن هدفك',
       mission_sub: 'كم ساعة بتقدر تذاكر أسبوعيًا؟ وأي تخصص أو كلية بذهنك؟',
       mission_placeholder: 'مثال: أبي كلية طب، باقي شهر ونص على القدرات',
+      mission_kicker: 'قِيس',
+      mission_tagline: 'خلني أعرف هدفك',
+      onboarding_visual_tagline: 'قِيس معك خطوة بخطوة نحو القدرات',
+      mission_seed_question: 'لنتحدث عن هدفك — وش التخصص المطلوب وليش القدرات مهم الحين؟',
+      mission_continue: 'متابعة ←',
+      mission_done_continue: 'متابعة ←',
 
       // mission transition
       transition_eyebrow: 'تم حفظ هدفك ✓',
@@ -233,6 +239,12 @@ const I18N = (() => {
       mission_title: "Let's talk about your goal",
       mission_sub: 'How many hours can you study weekly? Any target program in mind?',
       mission_placeholder: 'Example: I want medical school, exam is in 6 weeks',
+      mission_kicker: 'Qiyas',
+      mission_tagline: "Let's map out your goal",
+      onboarding_visual_tagline: 'Qiyas is with you, step by step, toward Qudrat',
+      mission_seed_question: "Let's talk about your goal — what program are you aiming for, and why does Qudrat matter right now?",
+      mission_continue: 'Continue →',
+      mission_done_continue: 'Continue →',
 
       transition_eyebrow: 'Your goal is saved ✓',
       transition_title: 'Preparing your learning journey...',

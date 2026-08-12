@@ -76,6 +76,84 @@
   --shadow-sm: 0 1px 3px rgba(18,33,59,0.06);
   --shadow-md: 0 4px 16px rgba(18,33,59,0.12);
   --shadow-lg: 0 12px 32px rgba(18,33,59,0.18);
+
+  /* ---- Visual Identity Overhaul: consolidated system tokens ----
+     Additive on top of everything above (never redefines an existing
+     token) — this is the single scale every NEW/redesigned component in
+     this pass (mascot, mission interview, onboarding shell, buttons,
+     forms, icons) is built on, so the app reads as one coherent system
+     instead of accumulating a third generation of ad hoc values. */
+
+  /* Fluid type scale — clamp() so headings/display text scale smoothly
+     between mobile and wide desktop instead of jumping at breakpoints.
+     --text-xs..--text-3xl above are kept as-is (small/body text doesn't
+     need fluid scaling and a LOT of existing rules reference them). */
+  --text-fluid-lg: clamp(17px, 1.05vw + 13px, 20px);
+  --text-fluid-xl: clamp(20px, 1.4vw + 14px, 26px);
+  --text-fluid-2xl: clamp(24px, 2vw + 16px, 34px);
+  --text-fluid-3xl: clamp(28px, 2.8vw + 16px, 44px);
+  --text-display: clamp(32px, 3.6vw + 18px, 56px);
+
+  /* Layout content widths — every screen's max-width picks one of these
+     instead of inventing its own number. */
+  --content-narrow: 400px;   /* auth/onboarding form column */
+  --content-reading: 640px;  /* lesson/quiz/chat-replacement reading column */
+  --content-standard: 760px; /* general screen default (matches existing rule) */
+  --content-quiz: 900px;     /* diagnostic/lesson-quiz/practice/mock-exam workspace — wider than reading text, still bounded */
+  --content-wide: 1180px;    /* dashboard/journey (matches existing rules) */
+
+  /* Component heights — buttons never silently change size screen to screen */
+  --button-sm: 36px;
+  --button-md: 48px;
+  --button-lg: 56px;
+
+  /* Icon sizes — structural iconography (nav, buttons, cards) */
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 28px;
+
+  /* Qiyas mascot size system — corrective visual-QA pass: sizes now map
+     directly onto the reviewed desktop guidance (background/passive 48-56,
+     contextual coach 64-80, active teaching moment 80-96, onboarding/
+     celebration 120-160) instead of one arbitrary token reused everywhere
+     regardless of context. Every consumer picks the tier that matches its
+     actual role on screen, never a bare pixel value. */
+  /* Human-centered art-direction pass: Qiyas was judged "too small to
+     matter" at every one of these tiers — bumped across the board to the
+     revised guidance ranges. Judged visually against real screens, not
+     just picked from the middle of each range. */
+  --mascot-xs: 36px;      /* tiny status (notification / list-avatar contexts) — was 20px */
+  --mascot-sm: 44px;      /* nav/avatar contexts — was 32px */
+  --mascot-passive: 60px; /* passive companion — floating widget default, dashboard hero — was 52px */
+  --mascot-md: 60px;      /* alias of --mascot-passive, kept so existing rules don't need touching */
+  --mascot-coach: 80px;   /* active contextual companion — dashboard companion card, practice screen — was 72px */
+  --mascot-lg: 80px;      /* alias of --mascot-coach */
+  --mascot-teaching: 100px;/* teaching interaction — mission interview header, inline lesson guidance — was 88px */
+  --mascot-xl: 152px;     /* onboarding moments — was 144px */
+  --mascot-celebration: 160px; /* results-screen celebration avatar — was 128px */
+
+  /* Motion — shared durations/easing so transitions read as one system */
+  --motion-fast: 0.15s;
+  --motion-base: 0.28s;
+  --motion-slow: 0.5s;
+  --motion-ease: cubic-bezier(0.34, 1.2, 0.4, 1);
+  --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Color roles — named aliases over the existing brand hexes above.
+     No new colors: this just gives every existing hex a semantic role so
+     new components reference the ROLE, not the hex. */
+  --color-primary: var(--ink);
+  --color-secondary: var(--accent);
+  --color-accent: var(--teal);
+  --color-success: var(--teal);
+  --color-warning: #C77D1E;
+  --color-danger: var(--coral);
+  --color-surface: var(--paper);
+  --color-surface-elevated: var(--paper);
+  --color-surface-sunken: var(--paper-dim);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--text-muted);
+  --color-border: var(--line);
 }
 
 * { box-sizing: border-box; }
@@ -355,23 +433,23 @@
 .quiz-card-feedback { margin-top: var(--space-3); }
 .quiz-card-hint-container:empty { display: none; }
 
-.xp-card { margin-bottom: var(--space-3); }
+.xp-card { flex: 1; min-width: 0; }
 .xp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
-.xp-card-level { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: var(--text-lg); }
-.xp-card-total { font-family: 'IBM Plex Mono', monospace; color: var(--accent); direction: ltr; }
-.xp-bar-track { height: 8px; background: rgba(251,248,242,0.15); border-radius: 4px; overflow: hidden; }
+.xp-card-level { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: var(--text-md); color: var(--ink); }
+.xp-card-total { font-family: 'IBM Plex Mono', monospace; color: var(--accent); direction: ltr; font-size: var(--text-sm); }
+.xp-bar-track { height: 6px; background: var(--paper-dim); border-radius: 4px; overflow: hidden; }
 .xp-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
-.xp-card-remaining { display: block; margin-top: var(--space-2); font-size: var(--text-xs); color: rgba(251,248,242,0.7); }
+.xp-card-remaining { display: block; margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-muted); }
 
-.streak-card { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
-.streak-card-icon { font-size: 32px; display: inline-block; }
+.streak-card { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); }
+.streak-card-icon { font-size: 28px; display: inline-block; flex-shrink: 0; }
 .streak-card-icon.active { animation: streakFlicker 1.6s ease-in-out infinite; transform-origin: center; }
 @keyframes streakFlicker {
   0%, 100% { transform: scale(1) rotate(-2deg); }
   50% { transform: scale(1.1) rotate(2deg); }
 }
-.streak-card-text { display: flex; flex-direction: column; gap: 2px; }
-.streak-card-text strong { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-size: var(--text-md); }
+.streak-card-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.streak-card-text strong { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-size: var(--text-sm); }
 .streak-card-text span { font-size: var(--text-xs); color: var(--text-muted); }
 
 .mastery-row { margin-bottom: var(--space-2); }
@@ -600,6 +678,8 @@ body {
 .topbar-logo {
   height: 26px;
   width: auto;
+  aspect-ratio: 250 / 122;
+  object-fit: contain;
   display: block;
 }
 .topbar-bell {
@@ -620,6 +700,20 @@ main#app {
 }
 main#app.with-nav { padding-bottom: 92px; }
 
+/* Corrective visual-QA pass — real bug found via actual mobile/tablet
+   rendering (Playwright viewport verification, not the unreliable browser
+   resize tool): the desktop-only onboarding/auth visual panel (mascot +
+   tagline — see the ":has()" composition block near the end of this file)
+   only ever got `display: none` INSIDE that panel's own `@media
+   (min-width: 1024px)` block. Below 1024px nothing hid it at all, so this
+   `<aside>` — a permanent sibling of every `.screen`, not scoped to any one
+   of them — rendered at the top of `main#app` on every single mobile/tablet
+   screen in the app (dashboard, mock exam, practice, all of it), not just
+   the onboarding group it's meant for. Hidden by default here now; the
+   desktop media query's more specific `:has()` selectors still opt the
+   right screen group back in on desktop only, so nothing there changes. */
+.onboarding-visual { display: none; }
+
 /* Qiyasy "simple background" (per brand guide's backgrounds page: soft brand-color
    blob shapes on a near-white surface) — applied only to hero "moment" screens
    (welcome, transition, results) where it reads as a designed backdrop rather than
@@ -627,6 +721,7 @@ main#app.with-nav { padding-bottom: 92px; }
 main#app:has(.screen[data-screen="welcome"]:not([hidden])),
 main#app:has(.screen[data-screen="mission-transition"]:not([hidden])),
 main#app:has(.screen[data-screen="diagnostic-done"]:not([hidden])),
+main#app:has(.screen[data-screen="mock-exam-intro"]:not([hidden])),
 main#app:has(.screen[data-screen="path-select"]:not([hidden])),
 main#app:has(.screen[data-screen="grade-select"]:not([hidden])),
 main#app:has(.screen[data-screen="target-score-select"]:not([hidden])),
@@ -655,7 +750,8 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 /* ---------- hero / welcome ---------- */
 .hero { text-align: center; margin: 30px 0 40px; }
 .welcome-logo {
-  height: 64px; width: auto; margin: 0 auto 24px; display: block;
+  height: 64px; width: auto; aspect-ratio: 235 / 95; object-fit: contain;
+  margin: 0 auto 24px; display: block;
   animation: welcomeIconIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes welcomeIconIn {
@@ -667,7 +763,13 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   animation: welcomeIconIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ---------- splash screen (first-launch feel) ---------- */
+/* ---------- splash screen — deliberate brand moment (corrective visual-QA
+   pass). Previously: logo + one line of gray text + three bouncing dots,
+   all tiny, floating in an otherwise-bare canvas — "has too much empty
+   space and feels unfinished." Now: logo, Qiyas mascot, the product promise,
+   and a subtle animated path/progress motif, composed as one group with a
+   quiet brand-gradient backdrop so the canvas itself reads as intentional
+   at any viewport instead of empty. Kept minimal — no extra copy added. ---------- */
 /* :not([hidden]) matters here — without it, this rule's `display: flex`
    (an author-stylesheet rule) outranks the browser's default [hidden]
    { display: none } UA rule, so setting el.hidden = true in showScreen()
@@ -676,20 +778,53 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .screen[data-screen="splash"]:not([hidden]) {
   display: flex; align-items: center; justify-content: center;
   min-height: calc(100vh - 60px);
+  background:
+    radial-gradient(circle at 15% 15%, rgba(30,58,138,0.06), transparent 40%),
+    radial-gradient(circle at 85% 25%, rgba(20,184,166,0.08), transparent 36%),
+    radial-gradient(circle at 25% 90%, rgba(120,137,185,0.07), transparent 34%);
 }
 .splash-content { text-align: center; }
 .splash-logo {
-  height: 72px; width: auto; margin: 0 auto 20px; display: block;
+  height: 80px; width: auto; aspect-ratio: 235 / 95; object-fit: contain;
+  margin: 0 auto 28px; display: block;
   animation: welcomeIconIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.splash-tagline { color: var(--text-muted); font-size: var(--text-sm); margin: 0 0 28px; }
-.splash-loader { display: flex; gap: 8px; justify-content: center; }
-.splash-loader span {
-  width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
-  animation: loadingDotBounce 1s ease-in-out infinite;
+/* Human-centered art-direction pass: Qiyas is the second-biggest thing on
+   this screen after the logo (the brief's own splash sketch puts it right
+   under the wordmark) — bumped from 96px, which read as a small accent,
+   toward the onboarding/celebration tier so it actually anchors the
+   composition instead of the logo standing alone with dead space below it. */
+.splash-mascot {
+  width: 128px; height: 128px; margin: 0 auto 28px;
+  animation: splashMascotIn 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
-.splash-loader span:nth-child(2) { animation-delay: 0.15s; }
-.splash-loader span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes splashMascotIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.82); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.splash-tagline {
+  color: var(--ink-soft); font-weight: 600; font-size: var(--text-lg); margin: 0 0 30px;
+  animation: fadeIn 0.5s 0.45s ease backwards;
+}
+/* Subtle animated path/progress motif — an indeterminate sweep along a
+   short track, standing in for "the journey ahead" rather than a generic
+   spinner. Communicates the same real thing the old bouncing dots did
+   (the app is booting) with a more deliberate, on-brand shape. */
+.splash-path {
+  width: 120px; height: 4px; margin: 0 auto; border-radius: 4px;
+  background: var(--paper-dim); overflow: hidden;
+  animation: fadeIn 0.5s 0.6s ease backwards;
+}
+.splash-path-fill {
+  display: block; width: 40%; height: 100%; border-radius: 4px;
+  background: var(--brand-gradient);
+  animation: splashPathSweep 1.3s ease-in-out infinite;
+}
+@keyframes splashPathSweep {
+  0% { transform: translateX(-110%); }
+  50% { transform: translateX(60%); }
+  100% { transform: translateX(160%); }
+}
 
 /* ---------- language / gender onboarding selectors ---------- */
 .lang-option-grid, .gender-option-grid {
@@ -796,6 +931,19 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   font-weight: 600;
   margin: 0 0 10px;
 }
+/* RESULTS screens (diagnostic-done / lesson-result / mock-exam-review):
+   "visible celebration/encouragement" — a real, contextually-large Qiyas
+   (120-160px desktop guidance) instead of relying on the small floating
+   widget. Sits ABOVE the existing outcome emoji badge (trophy/seedling/
+   lightbulb) rather than replacing it — that badge still carries real
+   meaning (which of 3 distinct outcomes happened); the mascot adds
+   celebratory presence, it doesn't replace the status glyph. */
+.result-mascot {
+  width: var(--mascot-celebration); height: var(--mascot-celebration);
+  margin: 0 auto 14px;
+  animation: badgeInBig 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.result-mascot:empty { display: none; }
 .celebration-badge {
   font-size: 40px;
   margin-bottom: 10px;
@@ -849,7 +997,8 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 
 /* ---------- mission → diagnostic transition ceremony ---------- */
 .transition-logo {
-  height: 52px; width: auto; margin: 0 auto 20px; display: block;
+  height: 52px; width: auto; aspect-ratio: 235 / 95; object-fit: contain;
+  margin: 0 auto 20px; display: block;
   animation: welcomeIconIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .prep-checklist { display: flex; flex-direction: column; gap: var(--space-3); max-width: 340px; margin: var(--space-6) auto 0; }
@@ -876,19 +1025,23 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 @keyframes prepSpin { to { transform: rotate(360deg); } }
 
 .btn-primary {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  min-height: var(--button-lg);
+  box-sizing: border-box;
   background: var(--ink);
   color: var(--paper);
   border: none;
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
   font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
   font-weight: 600;
   font-size: 16px;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(18,33,59,0.12);
-  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: transform var(--motion-fast) ease, background var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
 }
 .btn-primary:hover { background: var(--ink-dark); box-shadow: 0 6px 18px rgba(18,33,59,0.22); transform: translateY(-1px); }
 .btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(18,33,59,0.12); }
@@ -902,7 +1055,7 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .btn-primary[hidden] { display: none; }
 .btn-primary:disabled:hover { background: var(--ink); transform: none; }
 
-/* ---------- mission chat ---------- */
+/* ---------- section titles ---------- */
 .screen-title {
   font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
   font-weight: 700;
@@ -911,8 +1064,85 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 }
 .screen-sub { color: var(--text-muted); margin: 0 0 22px; font-size: 14.5px; }
 
-/* Chat-type screens (mission, ask-teacher): messages fill from top, input pinned to bottom */
-.screen[data-screen="mission"]:not([hidden]), .screen[data-screen="ask-teacher"]:not([hidden]) {
+/* ============================================================
+   Mission Interview — GUIDED INTERVIEW CARD, not a chat UI (Visual Identity
+   Overhaul). Backend (`POST /api/mission`) is a free-text LLM interview
+   with no fixed question schema, so this shows only the LATEST assistant
+   message as one active question card at a time — never a scrolling
+   two-side bubble conversation — with prior turns collapsed into a
+   compact "answered so far" strip. Quick-reply chips are an optional
+   presentation layer over the exact same free-text message the backend
+   already accepts (see App.missionChipsFor in app.js) — zero API changes.
+   ============================================================ */
+.screen[data-screen="mission"]:not([hidden]) {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: calc(100vh - 140px);
+}
+.interview-card {
+  background: white; border: 1.5px solid var(--line); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md); padding: var(--space-6) var(--space-5);
+  max-width: var(--content-reading); margin: 0 auto; width: 100%;
+  animation: fadeIn var(--motion-base) ease;
+}
+.interview-card-head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+.interview-avatar { width: var(--mascot-coach); height: var(--mascot-coach); flex-shrink: 0; }
+.interview-head-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.interview-name {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  font-weight: 700; font-size: var(--text-md); color: var(--ink);
+}
+.interview-tagline { font-size: var(--text-xs); color: var(--text-muted); }
+.interview-counter {
+  flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--accent);
+  background: var(--accent-tint); border-radius: 20px; padding: 4px 11px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.interview-answered { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.interview-answered:empty { display: none; margin: 0; }
+.interview-answered-item {
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  font-size: var(--text-xs); color: var(--text-muted); line-height: 1.6;
+  animation: fadeIn var(--motion-base) ease;
+}
+.interview-answered-item-check {
+  flex-shrink: 0; width: 15px; height: 15px; border-radius: 50%; margin-top: 2px;
+  background: var(--teal-tint); color: var(--teal); display: flex; align-items: center;
+  justify-content: center; font-size: 9px; font-weight: 700;
+}
+.interview-question {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  font-weight: 700; color: var(--ink); font-size: var(--text-fluid-xl);
+  line-height: 1.5; margin: 0 0 var(--space-5);
+}
+.interview-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+.interview-chip {
+  background: white; border: 1.5px solid var(--accent); color: var(--ink);
+  border-radius: 20px; padding: 9px 16px; font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  font-weight: 600; font-size: var(--text-sm); cursor: pointer;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+.interview-chip:hover { background: var(--accent); color: white; }
+.interview-chip:active { transform: scale(0.97); }
+/* [hidden] override needed — `.interview-input-row` sets `display: flex` on
+   the <form> itself at the same (author-stylesheet-wins-ties) specificity as
+   the browser's default `[hidden]{display:none}` UA rule, so App.js setting
+   missionForm.hidden=true would otherwise silently do nothing. Same class of
+   bug already documented/fixed for `.screen[data-screen="splash"]` and
+   `.btn-primary` elsewhere in this file — same fix. */
+.interview-input-row { display: flex; gap: var(--space-2); }
+.interview-input-row[hidden] { display: none; }
+.interview-input-row input {
+  flex: 1; min-width: 0; padding: 0 var(--space-4); height: var(--button-lg);
+  border-radius: var(--radius-md); border: 1.5px solid var(--line);
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-size: var(--text-md); background: white;
+}
+.interview-input-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+.interview-continue-btn { width: auto; flex-shrink: 0; padding-inline: var(--space-5); margin: 0; height: var(--button-lg); }
+
+/* ---------- ask-teacher / ask-lesson: still a lightweight Q&A chat, but
+   restyled below (see "grounded mini-chat" section) to drop the corner-
+   avatar chat-bubble affordance the mission screen used to share with it. ---------- */
+.screen[data-screen="ask-teacher"]:not([hidden]) {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 140px);
@@ -925,18 +1155,12 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   line-height: 1.6;
   max-width: 85%;
 }
-.bubble-assistant {
-  background: var(--paper-dim); align-self: flex-start; border-bottom-left-radius: 4px;
-  position: relative; margin-inline-start: 30px;
-}
-.bubble-assistant::before {
-  content: '🎓';
-  position: absolute; inset-inline-start: -30px; bottom: 0;
-  width: 24px; height: 24px; border-radius: 50%;
-  background: var(--ink); color: var(--paper);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; flex-shrink: 0;
-}
+/* No corner-avatar chat-bubble affordance (Visual Identity Overhaul —
+   removed the emoji graduation-cap pseudo-avatar that used to sit outside
+   every assistant bubble: structural emoji-as-UI-icon, and it made this
+   read as a generic messaging surface). Ask Teacher / Ask About This
+   Lesson stay a compact grounded Q&A, just without the chat-app dressing. */
+.bubble-assistant { background: var(--paper-dim); align-self: flex-start; border-bottom-left-radius: 4px; }
 .bubble-user { background: var(--ink); color: var(--paper); align-self: flex-end; border-bottom-right-radius: 4px; }
 .bubble-typing { opacity: 0.6; font-style: italic; animation: bubble-typing-pulse 1.2s ease-in-out infinite; }
 @keyframes bubble-typing-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.85; } }
@@ -957,14 +1181,36 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   background: var(--accent); color: white; font-size: 18px; cursor: pointer;
 }
 
-/* ---------- quiz ---------- */
-.progress-bar { height: 6px; background: var(--paper-dim); border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+/* ---------- quiz (diagnostic / lesson-quiz / practice / mock-exam-quiz) ----------
+   Corrective visual-QA pass: `.quiz-shell` wraps every one of these four
+   screens' content (see index.html) so a real desktop workspace — a
+   bordered, padded card with its own header bar — replaces bare stem+
+   options floating against the page. Mobile/tablet keep the shell visually
+   transparent (no border/shadow/padding of its own) since the phone-card
+   frame already provides that container feel there. */
+.quiz-shell { width: 100%; }
+
+.quiz-progress-header { margin-bottom: var(--space-5); }
+.quiz-progress-label {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.quiz-counter-row .quiz-progress-label { margin: 0; flex: 1; }
+
+/* A visibly real progress bar, not a hairline — "meaningful," not decorative. */
+.progress-bar { height: 8px; background: var(--paper-dim); border-radius: 4px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 4px; transition: width 0.35s ease; width: 0%;
+  background: linear-gradient(90deg, var(--ink-soft) 0%, var(--teal) 100%);
+}
 
 .quiz-stem {
   font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
   font-weight: 700;
-  font-size: 19px;
+  font-size: var(--text-fluid-xl);
   line-height: 1.6;
   margin: 4px 0 22px;
 }
@@ -979,10 +1225,10 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   border: 1.5px solid var(--line);
   background: white;
   font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
-  font-size: 14.5px;
+  font-size: var(--text-md);
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 .option-btn::before {
   content: attr(data-letter);
@@ -994,14 +1240,40 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--text-muted);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
+/* ---- interaction states: default / hover / keyboard focus / selected /
+   correct / incorrect / disabled — border + surface + elevation + icon +
+   motion together, never color alone (color-blind-safe, matches the
+   coral/teal pairing already used elsewhere). ---- */
 .option-btn:hover:not(:disabled) { border-color: var(--ink-soft); box-shadow: 0 4px 12px rgba(18,33,59,0.08); transform: translateY(-1px); }
 .option-btn:active:not(:disabled) { transform: scale(0.985); }
-.option-btn.correct { border-color: var(--teal); background: var(--teal-tint); }
-.option-btn.correct::before { border-color: var(--teal); color: var(--teal); background: white; }
-.option-btn.incorrect { border-color: var(--coral); background: var(--coral-tint); }
-.option-btn.incorrect::before { border-color: var(--coral); color: var(--coral); background: white; }
+.option-btn:focus-visible {
+  outline: none;
+  border-color: var(--ink-soft);
+  box-shadow: 0 0 0 3px var(--accent-tint), 0 4px 12px rgba(18,33,59,0.08);
+}
+/* selected: applied the instant a choice is tapped, before the network
+   round-trip resolves it correct/incorrect — an immediate, visible response
+   rather than a dead tap. Solid ink fill (not a tint) keeps it unmistakably
+   distinct from the pale correct/incorrect tints that follow it. */
+.option-btn.selected {
+  border-color: var(--ink); background: var(--ink); color: white;
+  box-shadow: 0 4px 14px rgba(18,33,59,0.22);
+}
+.option-btn.selected::before { border-color: rgba(255,255,255,0.5); color: white; background: transparent; }
+.option-btn.correct {
+  border-color: var(--teal); background: var(--teal-tint);
+  box-shadow: 0 4px 14px rgba(20,184,166,0.18);
+}
+.option-btn.correct::before { border-color: var(--teal); color: white; background: var(--teal); content: "✓"; font-weight: 700; }
+.option-btn.incorrect {
+  border-color: var(--coral); background: var(--coral-tint);
+  box-shadow: 0 4px 14px rgba(193,68,59,0.16);
+}
+.option-btn.incorrect::before { border-color: var(--coral); color: white; background: var(--coral); content: "✕"; font-weight: 700; }
 .option-btn:disabled { cursor: default; }
+.option-btn:disabled:not(.selected):not(.correct):not(.incorrect) { opacity: 0.55; }
 
 .feedback { margin-top: 16px; }
 .feedback-card { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
@@ -1073,8 +1345,7 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   animation: fadeIn 0.4s ease;
 }
 .home-hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-.home-hero-avatar { width: 44px; height: 44px; flex-shrink: 0; }
-.home-hero-avatar svg { width: 100%; height: 100%; display: block; animation: companionIdleBob 3.6s ease-in-out infinite; }
+.home-hero-avatar { width: var(--mascot-md); height: var(--mascot-md); flex-shrink: 0; }
 .home-hero-text { min-width: 0; }
 .home-hero-greeting {
   margin: 0; font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
@@ -1215,16 +1486,34 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .mission-item.done .mission-item-check { background: var(--teal); border-color: var(--teal); color: white; animation: badgeIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
 
 /* ---------- 5. companion card (integrated, not floating) ---------- */
+/* Human-centered art-direction pass: a coach's note, not a chatbot bubble —
+   dropped the full teal-tinted fill + matching border (one more "AI
+   assistant surface" competing with the hero's actual brand-gradient
+   moment above it) for a plain white surface with a single accent rule on
+   the leading edge, the way an editorial callout reads. */
 .companion-inline-card {
-  display: flex; align-items: center; gap: 12px; background: var(--accent-tint);
-  border: 1.5px solid var(--accent); border-radius: var(--radius-lg); padding: var(--space-4);
+  display: flex; align-items: center; gap: 12px; background: white;
+  border: 1px solid var(--line); border-inline-start: 3px solid var(--teal);
+  border-radius: var(--radius-md); padding: var(--space-4);
   margin-bottom: var(--space-5); animation: fadeIn 0.3s ease;
 }
-.companion-inline-card-avatar { width: 40px; height: 40px; flex-shrink: 0; }
-.companion-inline-card-avatar svg { width: 100%; height: 100%; display: block; }
+.companion-inline-card-avatar { width: var(--mascot-coach); height: var(--mascot-coach); flex-shrink: 0; }
 .companion-inline-card-text { margin: 0; font-size: var(--text-sm); color: var(--ink); line-height: 1.6; }
 
-.stat-cards-row { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-2); }
+/* Human-centered art-direction pass: ONE bordered surface instead of two
+   full separately-carded stats stacked on top of each other ("card inside
+   card" / generic dashboard-grid feel) — XP and streak are secondary/
+   tertiary information next to "continue learning," so they share a single
+   light strip with an internal divider, not their own competing cards. */
+.stat-cards-row {
+  display: flex; align-items: stretch; gap: var(--space-4);
+  background: white; border: 1.5px solid var(--line); border-radius: var(--radius-lg);
+  padding: var(--space-4); margin-bottom: var(--space-5); box-shadow: var(--shadow-sm);
+}
+/* #xpCardContainer/#streakCardContainer (index.html) are the actual flex
+   children — .xp-card/.streak-card are one level deeper inside them. */
+.stat-cards-row > * { flex: 1; min-width: 0; display: flex; }
+#xpCardContainer { padding-inline-end: var(--space-4); border-inline-end: 1px solid var(--line); }
 
 /* ---------- 6. achievements grid ---------- */
 .achievements-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -1255,12 +1544,20 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .skill-progress-fill.weak { background: var(--coral); }
 
 /* ---------- 10. upcoming ---------- */
-.upcoming-item {
-  display: flex; align-items: center; gap: 12px; padding: var(--space-3);
-  border: 1.5px solid var(--line); border-radius: var(--radius-md); margin-bottom: var(--space-2);
-  cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease;
+/* Human-centered art-direction pass: ONE bordered list, items separated by
+   a plain divider — not N separate fully-bordered cards stacked with gaps
+   (the "card inside card inside card" pattern). */
+#upcomingList {
+  background: white; border: 1.5px solid var(--line); border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--shadow-sm);
 }
-.upcoming-item:hover { transform: translateY(-1px); border-color: var(--accent); }
+.upcoming-item {
+  display: flex; align-items: center; gap: 12px; padding: var(--space-4);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer; transition: background 0.15s ease;
+}
+.upcoming-item:last-child { border-bottom: none; }
+.upcoming-item:hover { background: var(--paper-dim); }
 .upcoming-item-icon { font-size: 20px; flex-shrink: 0; }
 .upcoming-item-text { display: flex; flex-direction: column; gap: 2px; }
 .upcoming-item-text strong { font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-size: var(--text-sm); }
@@ -1360,10 +1657,9 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .error-banner[hidden] { display: none; }
 
 /* ---------- mock exam ---------- */
-.exam-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 14px;
-}
+/* .exam-header/.exam-counter retired — mock-exam-quiz now shares the same
+   .quiz-progress-header/.quiz-counter-row markup as the other three quiz
+   screens (see index.html) instead of its own one-off header. */
 .exam-timer {
   font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
@@ -1375,7 +1671,6 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 }
 .exam-timer.low-time { animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.exam-counter { font-size: 13px; color: var(--text-muted); direction: ltr; unicode-bidi: isolate; }
 .counter-ltr { direction: ltr; unicode-bidi: isolate; }
 
 /* ---------- Version 3 Phase C: Learning Mode vs Simulation Mode ---------- */
@@ -1444,13 +1739,23 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .ref-sheet-line { font-size: 13px; line-height: 1.6; margin-bottom: 3px; color: var(--ink-soft); }
 .ref-sheet-line.caution { color: var(--coral); }
 
-/* ---------- friendly empty states (notifications / glossary / reference sheets / practice) ---------- */
+/* ---------- friendly empty states (notifications / glossary / reference sheets / practice) ----------
+   A composed moment, not "tiny text floating in a huge void": a bounded
+   card with real vertical presence, centered as a group (icon + heading +
+   body), instead of just text sitting alone in the middle of a wide
+   desktop column. */
 .empty-state {
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  padding: var(--space-8) var(--space-5); color: var(--text-muted);
+  padding: var(--space-8) var(--space-6); color: var(--text-muted);
+  background: var(--paper-dim); border-radius: var(--radius-lg);
+  max-width: 420px; margin: var(--space-6) auto; min-height: 220px; justify-content: center;
   animation: fadeIn 0.4s ease;
 }
-.empty-state-icon { font-size: 40px; margin-bottom: var(--space-4); opacity: 0.85; }
+.empty-state-icon {
+  font-size: 40px; margin-bottom: var(--space-4); opacity: 0.9;
+  width: 64px; height: 64px; border-radius: 50%; background: white;
+  display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);
+}
 .empty-state-text { margin: 0; font-size: var(--text-sm); line-height: 1.7; max-width: 300px; }
 .empty-state[hidden] { display: none; }
 
@@ -1544,7 +1849,19 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   overflow-y: auto;
 }
 .sidebar-nav[hidden] { display: none; }
-.sidebar-nav-logo { height: 24px; width: auto; display: block; margin: 4px 10px 28px; }
+/* height + aspect-ratio + object-fit:contain is belt-and-suspenders against
+   distortion; `align-self: flex-start` is the load-bearing fix — .sidebar-nav
+   is a column flex container with no `align-items` set, so its default
+   `align-items: stretch` was overriding this element's `width: auto` on the
+   cross axis for this replaced element (a real, measured bug: the logo
+   rendered at the sidebar's full inner width, squashed to ~4x its real
+   aspect ratio, instead of sizing from its own height). `align-self` opts
+   this one child out of that stretch without touching every other sidebar
+   item, which still wants to stretch full-width. */
+.sidebar-nav-logo {
+  height: 24px; width: auto; aspect-ratio: 250 / 122; object-fit: contain;
+  align-self: flex-start; display: block; margin: 4px 10px 28px;
+}
 .sidebar-nav-item {
   display: flex; align-items: center; gap: 12px;
   width: 100%; border: none; background: none; cursor: pointer;
@@ -1556,8 +1873,10 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   text-align: start;
   position: relative;
 }
-.sidebar-nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
-.sidebar-nav-icon { font-size: 16px; width: 20px; flex-shrink: 0; text-align: center; }
+.sidebar-nav-item svg { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; }
+/* .sidebar-nav-item svg (below) sizes every sidebar icon uniformly now —
+   the whole rail (top 4 primary items + this second group) shares one
+   stroke-icon family instead of mixing SVGs with structural emoji. */
 .sidebar-nav-item:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
 .sidebar-nav-item.active { background: rgba(255,255,255,0.16); color: var(--paper); }
 .sidebar-nav-item.active svg { color: var(--teal); }
@@ -1618,7 +1937,8 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 }
 .more-sheet-item:hover { border-color: var(--accent); }
 .more-sheet-item:active { transform: scale(0.99); }
-.more-sheet-icon { font-size: 18px; }
+.more-sheet-icon { width: var(--icon-md); height: var(--icon-md); flex-shrink: 0; color: var(--ink-soft); }
+.more-sheet-item-danger .more-sheet-icon { color: var(--coral); }
 
 /* ---------- Version 3 Phase E: Companion Panel ---------- */
 /* Same slide-up bottom-sheet technique as .more-sheet above, but with a real
@@ -1644,8 +1964,7 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
   background: var(--brand-gradient); border-radius: 16px; padding: 14px 16px;
 }
-.companion-panel-avatar { width: 46px; height: 46px; flex-shrink: 0; }
-.companion-panel-avatar svg { width: 100%; height: 100%; display: block; }
+.companion-panel-avatar { width: var(--mascot-md); height: var(--mascot-md); flex-shrink: 0; }
 .companion-panel-title { margin: 0; flex: 1; font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: var(--text-md); color: white; }
 .companion-panel-close {
   flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; border: none;
@@ -1699,6 +2018,194 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .resource-badge.secondary { background: var(--paper-dim); color: var(--text-muted); }
 .resource-annotation { font-size: 12.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
 
+/* ============================================================
+   Qiyas mascot — "Compass-Star Beacon" (Visual Identity Overhaul;
+   corrective visual-QA pass — see git history for the review this
+   responds to). An original geometric silhouette (soft rounded 4-point
+   star/compass — NOT a copy of the Qiyasy logo mark, not a circle-with-
+   dots, not a generic AI chat avatar). ONE shared SVG (built by
+   Companion.mascotMarkup() — see companion.js) with exactly one pair of
+   small geometric eye marks — no swapped per-emotion eye/mouth shapes, no
+   mouth at all. Every one of the 10 named states is expressed purely
+   through CSS transforms on those two marks (rotate = angle, scaleY =
+   scale, translate = position) plus body tilt/scale, glow, ring-pulse and
+   sparkle accents on the wrapper — never by swapping in a different face
+   shape. This is deliberate: the prior version's "neutral" face (two flat
+   closed-eye dashes) still read as a permanently smiling emoji by
+   pareidolia alone even with zero mouth in the markup, so the fix is
+   encoding expression as motion/geometry, not drawing a happier or sadder
+   face. Sizing is systematic: every consumer picks one of the
+   --mascot-xs/sm/md/lg/xl tokens (style.css :root) instead of an
+   arbitrary per-component pixel value.
+   ============================================================ */
+.qiyas-mascot { display: inline-block; position: relative; }
+.qiyas-svg {
+  width: 100%; height: 100%; display: block; overflow: visible;
+  /* A soft elevation shadow + a thin light body outline (below) keep Qiyas
+     legible even when placed on a surface using the same brand gradient
+     (the hero, the mission-interview header) — without them the body fill
+     can visually merge into a matching background. */
+  filter: drop-shadow(0 2px 6px rgba(18,33,59,0.22));
+}
+.qiyas-body { stroke: rgba(255,255,255,0.55); stroke-width: 1.1; paint-order: stroke fill; }
+.qiyas-body-group, .qiyas-eyes {
+  transform-box: fill-box; transform-origin: center;
+}
+/* The two eye marks: one geometric shape, no per-emotion swapping. Each
+   gets its own transform-box/origin so rotate/scale below pivots on the
+   mark's own center, not the eyes group's — this is what lets "eye angle"
+   and "eye scale" read as individual, asymmetric expression instead of
+   both eyes moving as one rigid unit. `will-change` keeps the transition
+   smooth on the (rare) low-power devices where implicit compositing lags. */
+.qiyas-eye {
+  fill: #fff;
+  transform-box: fill-box; transform-origin: center;
+  transition: transform 0.25s var(--motion-ease);
+  will-change: transform;
+}
+.qiyas-glow { opacity: 0; transition: opacity var(--motion-slow) ease; }
+.qiyas-ring { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.qiyas-sparkle { opacity: 0; transform-box: fill-box; transform-origin: center; }
+
+/* ---- per-state eye expression — angle + scale + position only, never a
+   different mark shape. Mirrored pairs (qiyas-eye-l/-r) keep the face
+   symmetric for calm states and intentionally asymmetric for "thinking"
+   (one eye reads as raised — the universal "considering" cue). ---- */
+.qiyas-anim-happy .qiyas-eye-l, .qiyas-anim-success .qiyas-eye-l {
+  transform: rotate(-24deg) scaleY(0.82) translateY(0.3px);
+}
+.qiyas-anim-happy .qiyas-eye-r, .qiyas-anim-success .qiyas-eye-r {
+  transform: rotate(24deg) scaleY(0.82) translateY(0.3px);
+}
+.qiyas-anim-celebrating .qiyas-eye-l { transform: rotate(-28deg) scaleY(0.78) translateY(0.3px); }
+.qiyas-anim-celebrating .qiyas-eye-r { transform: rotate(28deg) scaleY(0.78) translateY(0.3px); }
+.qiyas-anim-encouraging .qiyas-eye-l,
+.qiyas-anim-encouraging .qiyas-eye-r { transform: scaleY(0.72); }
+.qiyas-anim-concerned .qiyas-eye-l { transform: rotate(13deg) translate(0.4px, 1.1px) scaleY(0.88); }
+.qiyas-anim-concerned .qiyas-eye-r { transform: rotate(-13deg) translate(-0.4px, 1.1px) scaleY(0.88); }
+.qiyas-anim-thinking .qiyas-eye-r { transform: translateY(-2.2px) rotate(14deg) scaleY(0.9); }
+.qiyas-anim-thinking .qiyas-eye-l { transform: translateY(0.4px); }
+
+/* ============================================================
+   MOTION STATE MACHINE (human-centered art-direction pass).
+   Root-cause fix for the reported "Qiyas snaps back to its original
+   position" bug: every state used to drive `.qiyas-body-group`'s
+   `transform` via a competing `@keyframes animation`. CSS animations don't
+   interpolate between each other — swapping the `animation` property
+   (which is what state changes did) makes the browser jump the element
+   INSTANTLY from wherever the outgoing animation's loop currently was to
+   the incoming animation's 0% frame, in the same repaint. Idle's breathe
+   and thinking's tilt are both infinite loops that are NEVER at rest when
+   interrupted, so every single state change out of them (which is most of
+   them — a wrong-answer reaction, a mission-interview reply, a celebration)
+   produced a visible instant pose reset. That reads exactly as "moves,
+   then snaps back."
+   Fix: decouple "ambient life" from "state gesture" onto two different
+   elements. `.qiyas-float` (a new wrapper — see companion.js/
+   mascot-preview.html's mascotMarkup()) carries ONE always-on breathing
+   loop that is NEVER touched by state changes, so it's never interrupted.
+   `.qiyas-body-group` (inside it) carries the STATE's own gesture, driven
+   by a plain CSS `transition` wherever possible — a transition always
+   interpolates smoothly from the element's actual current rendered value,
+   in either direction, even if a new state arrives mid-transition. Only
+   `thinking`/`concerned` still use a small continuous loop (they're
+   meant to visibly persist while that state is active, per spec), kept at
+   a deliberately small amplitude so the (much rarer, now bounded) residual
+   jump on exit is minor rather than a full pose reset. ============================================================ */
+.qiyas-float {
+  transform-box: fill-box; transform-origin: center;
+  animation: qiyasBreathe 4.4s ease-in-out infinite;
+}
+@keyframes qiyasBreathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1.5px) scale(1.018); }
+}
+.qiyas-body-group {
+  transition: transform 0.35s var(--motion-ease-spring), filter 0.3s ease;
+}
+
+/* ---- idle / RESTING: the ambient wrapper above IS the idle behavior —
+   body-group itself carries no state transform, just an occasional blink. ---- */
+@keyframes qiyasBlink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.12); }
+}
+.qiyas-anim-idle .qiyas-eyes { animation: qiyasBlink 5.8s ease-in-out infinite; }
+
+/* ---- blink: a deliberate one-off, exposed for callers that want to force it ---- */
+.qiyas-anim-blink .qiyas-eyes { transform: scaleY(0.12); }
+
+/* ---- looking / OBSERVING: a small side-to-side glance, e.g. toward new content ---- */
+@keyframes qiyasLook {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(1.4px); }
+  50% { transform: translateX(1.4px); }
+  75% { transform: translateX(-1.4px); }
+}
+.qiyas-anim-looking .qiyas-eyes { animation: qiyasLook 3.2s ease-in-out infinite; }
+
+/* ---- thinking / THINKING: a slow, gentle tilt — "pondering," not spinning.
+   Small amplitude (was ±3.5deg) specifically so the exit jump — the one
+   case that still uses a loop, since this needs to visibly persist for as
+   long as the state is active — stays minor even when interrupted. ---- */
+@keyframes qiyasTilt {
+  0%, 100% { transform: rotate(-1.75deg); }
+  50% { transform: rotate(1.75deg); }
+}
+.qiyas-anim-thinking .qiyas-body-group { animation: qiyasTilt 2.8s ease-in-out infinite; }
+
+/* ---- encouraging / ENCOURAGING: warm, calm — a soft glow pulse, no body
+   movement of its own (the ambient wrapper already supplies "alive"). ---- */
+@keyframes qiyasGlowPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+.qiyas-anim-encouraging .qiyas-glow { opacity: 0.35; animation: qiyasGlowPulse 2.4s ease-in-out infinite; }
+
+/* ---- happy / SUCCESS: a settle-in pop that HOLDS at its target (transition-
+   driven, not a keyframe) — smoothly reachable from any prior pose, and
+   smoothly reversible back to rest whenever the caller reverts the state. ---- */
+.qiyas-anim-happy .qiyas-body-group,
+.qiyas-anim-success .qiyas-body-group { transform: scale(1.07) rotate(2deg); }
+
+/* ---- celebrating / CELEBRATING: the biggest reaction, still transition-
+   driven so it can be interrupted (a fast student advancing screens) without
+   ever jumping — it just eases toward wherever the next state resolves to. ---- */
+@keyframes qiyasSparkleTwinkle {
+  0%, 100% { opacity: 0.55; transform: scale(0.85) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(12deg); }
+}
+.qiyas-anim-celebrating .qiyas-body-group { transform: scale(1.12) rotate(4deg); }
+.qiyas-anim-celebrating .qiyas-sparkle { opacity: 1; animation: qiyasSparkleTwinkle 1.1s ease-in-out infinite; }
+.qiyas-anim-celebrating .qiyas-sparkle-2 { animation-delay: 0.3s; }
+
+/* ---- success: calmer than celebrating — a thin ring pulse (like a
+   checkmark's glow) instead of a full bounce, used for per-answer feedback ---- */
+@keyframes qiyasRingPulse {
+  0% { opacity: 0.7; transform: scale(0.92); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+.qiyas-anim-success .qiyas-ring { animation: qiyasRingPulse 1s ease-out infinite; }
+.qiyas-anim-success .qiyas-sparkle-1 { opacity: 1; animation: qiyasSparkleTwinkle 1.3s ease-in-out infinite; }
+
+/* ---- concerned / CONCERNED: dimmer, slower, a small downward lean — never
+   harsh. Small continuous loop like thinking, same reasoning. ---- */
+@keyframes qiyasConcernedTilt {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(1.2px) rotate(-1.5deg); }
+}
+.qiyas-anim-concerned .qiyas-body-group { animation: qiyasConcernedTilt 3s ease-in-out infinite; filter: saturate(0.82); }
+
+/* ---- pointing / GUIDING (& ATTENTION): a directional lean toward whatever
+   Qiyas is guiding the student to — HOLDS the lean (transition-driven, not a
+   twitch-and-reset keyframe) for as long as the state is active, which
+   reads as actually pointing at something instead of a blink-and-you-miss-it
+   tic. Callers revert to idle/resting explicitly when the moment passes
+   (see say()'s autoHideMs in companion.js), and that reversal is just as
+   smooth since it's the same transition running in reverse. ---- */
+.qiyas-anim-pointing .qiyas-body-group { transform: rotate(-6deg) translateY(-2px); }
+.qiyas-anim-pointing .qiyas-eyes { transform: translateX(1.6px); }
+
 /* ---------- Educational Companion (Version 2, Phase 2) ---------- */
 /* Persistent floating widget, fixed inside the phone frame (a sibling of
    #bottomNav, not tied to any one screen) — z-index sits above ordinary
@@ -1736,65 +2243,41 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   to { opacity: 0; transform: translateY(12px) scale(0.82); }
 }
 .companion-avatar-btn {
-  width: 52px; height: 52px;
+  width: var(--mascot-passive); height: var(--mascot-passive);
   border-radius: 50%;
   border: none;
   padding: 0;
   cursor: pointer;
   background: transparent;
-  box-shadow: 0 6px 18px rgba(18,33,59,0.28);
-  transition: transform 0.15s ease;
+  box-shadow: none;
+  transition: transform 0.15s ease, width 0.2s ease, height 0.2s ease;
 }
+/* Contextual size tiers (corrective visual-QA pass) — see Companion.enter()'s
+   `size` param in companion.js. 'passive' is the base rule above (default). */
+.companion-size-coach .companion-avatar-btn { width: var(--mascot-coach); height: var(--mascot-coach); }
+.companion-size-teaching .companion-avatar-btn { width: var(--mascot-teaching); height: var(--mascot-teaching); }
 .companion-avatar-btn:hover { transform: scale(1.05); }
 .companion-avatar-btn:active { transform: scale(0.96); }
 .companion-avatar-svg { width: 100%; height: 100%; display: block; }
 
-/* idle: slow breathing/bob loop — the mascot's resting state */
-.companion-idle .companion-avatar-btn { animation: companionIdleBob 3.2s ease-in-out infinite; }
-@keyframes companionIdleBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-/* thinking: reuses the exact bubble-typing-pulse keyframe already built for
-   chat "is typing" indicators (see .bubble-typing above) — same technique,
-   applied to the avatar instead of chat text. */
-.companion-thinking .companion-avatar-btn { animation: bubble-typing-pulse 1.2s ease-in-out infinite; }
-
-/* celebrating: reuses the exact badgeInBig spring-scale keyframe already
-   built for the lesson-result celebration badge. */
-.companion-celebrating .companion-avatar-btn { animation: badgeInBig 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-/* pointing: a small directional lean toward the relevant CTA */
-.companion-pointing .companion-avatar-btn { animation: companionPoint 0.5s ease; }
-@keyframes companionPoint {
-  0% { transform: rotate(0); }
-  40% { transform: rotate(-8deg) translateY(-2px); }
-  100% { transform: rotate(0); }
-}
+/* The avatar button no longer owns any state animation itself — the Qiyas
+   mascot (see the "Qiyas mascot" system near the top of this file) drives
+   its own idle/thinking/celebrating/pointing/etc. motion internally via its
+   `.qiyas-anim-*` classes on the SVG it renders inside this button, so a
+   second, redundant animation layer on the button itself would just fight
+   it. `.companion-typing` is kept below — it animates the speech BUBBLE
+   TEXT, not the avatar, and still applies regardless of mascot state. */
 
 /* typing: the bubble text fades in the same italic-pulse style used for
    .bubble-typing while a line is being "said" */
 .companion-typing .companion-bubble-text { animation: bubble-typing-pulse 1.2s ease-in-out 2; }
 
-.companion-swirl { animation: companionIdleBob 3.2s ease-in-out infinite; transform-origin: center; }
-
-/* Version 4: "alive even when idle" — one combined keyframe (not two
-   simultaneous animations both touching `transform`, which browsers don't
-   reliably blend) giving a periodic blink AND a subtle look-around eye
-   shift — shared by every mascot instance (floating widget, hero avatar,
-   companion card, panel header) since they all render the same
-   companion-face-default markup via Companion.mascotMarkup(). */
-.companion-face-default .companion-eye { transform-box: fill-box; transform-origin: center; animation: companionEyeLife 6s ease-in-out infinite; }
-@keyframes companionEyeLife {
-  0%, 100% { transform: translateX(0) scaleY(1); }
-  15% { transform: translateX(1.4px) scaleY(1); }
-  30% { transform: translateX(1.4px) scaleY(1); }
-  45% { transform: translateX(-1.4px) scaleY(1); }
-  60% { transform: translateX(-1.4px) scaleY(1); }
-  75% { transform: translateX(0) scaleY(1); }
-  96% { transform: translateX(0) scaleY(1); }
-  98% { transform: translateX(0) scaleY(0.12); }
+/* Generic small bob loop — kept as a standalone utility keyframe (used by
+   the "current" journey-node marker; the Qiyas mascot itself now has its
+   own dedicated qiyasBreathe keyframe instead of this one). */
+@keyframes companionIdleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 .companion-bubble {
@@ -1872,6 +2355,56 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   .screen[data-screen="dashboard"] { max-width: 1180px; }
   .screen[data-screen="journey"] { max-width: 1000px; }
 
+  /* ---- quiz workspace (corrective visual-QA pass) ----
+     diagnostic / lesson-quiz / practice / mock-exam-quiz get their own wider
+     token (--content-quiz, 900px — between the 760px reading default and the
+     1180px dashboard) PLUS a real bounded card (.quiz-shell) instead of the
+     bare stem+options pair that used to float directly on the page,
+     centered in whatever space was left over. This is the fix for "tiny
+     content floating inside a huge desktop canvas" on the exam/practice/
+     diagnostic screens specifically. */
+  .screen[data-screen="diagnostic"],
+  .screen[data-screen="lesson-quiz"],
+  .screen[data-screen="practice"],
+  .screen[data-screen="mock-exam-quiz"] { max-width: var(--content-quiz); }
+
+  .quiz-shell {
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-8) var(--space-8) var(--space-7);
+  }
+  .quiz-progress-header { margin-bottom: var(--space-7); }
+  .quiz-progress-label { font-size: var(--text-lg); }
+  .progress-bar { height: 10px; }
+  .quiz-stem { font-size: var(--text-fluid-2xl); margin-bottom: var(--space-7); }
+  .options { gap: var(--space-4); }
+  .option-btn { padding: 20px 26px; font-size: var(--text-lg); }
+  .option-btn::before { width: 30px; height: 30px; font-size: 13px; }
+  /* Practice's own screen-title/eyebrow sit above the shell (not inside it,
+     see index.html) — keep them aligned to the same wider column. */
+  .screen[data-screen="practice"] > .screen-eyebrow,
+  .screen[data-screen="practice"] > .screen-title { max-width: var(--content-quiz); }
+
+  /* ---- dense reading-list screens (corrective visual-QA pass) ----
+     Reference sheets / glossary / resources: real study content, still
+     sized for a 375px phone (13-13.5px body text) even at desktop widths.
+     Bump toward --text-md/--text-lg for actual desktop legibility — this is
+     the "helper text / card metadata" the typography audit called out,
+     not a blanket enlarge-everything pass. Card padding grows slightly
+     alongside so the extra text doesn't feel cramped against the border. */
+  .ref-sheet-category { padding: var(--space-5) var(--space-6); }
+  .ref-sheet-category-title { font-size: var(--text-xl); }
+  .ref-sheet-skill-name { font-size: var(--text-md); }
+  .ref-sheet-line { font-size: var(--text-md); line-height: 1.7; }
+  .glossary-entry { padding: var(--space-4) var(--space-5); }
+  .glossary-term { font-size: var(--text-lg); }
+  .glossary-definition { font-size: var(--text-md); }
+  .resource-entry { padding: var(--space-4) var(--space-5); }
+  .resource-title { font-size: var(--text-md); }
+  .resource-annotation { font-size: var(--text-sm); }
+
   /* The companion panel slides up as a bottom sheet spanning the whole app
      width; at desktop width that would run straight under the sidebar.
      Confine it to the content column instead. Physical `right` (not a
@@ -1879,4 +2412,125 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
      sidebar grid track sits on the physical-right edge in this RTL layout
      (grid column 1 = inline-start = right, under dir="rtl"). */
   .companion-panel-backdrop, .companion-panel { right: 248px; }
+}
+
+/* ============================================================
+   Onboarding / auth desktop composition (>=1024px). Placed after the
+   desktop app-shell block above for the same source-order reason it
+   documents — this overrides `.phone`'s grid-template-columns and
+   `main#app`'s layout for the specific screen group where the sidebar rail
+   is hidden (pre-login / pre-onboarding).
+   Two real bugs this also fixes, not just a visual upgrade:
+   1. `.phone`'s desktop grid always reserved a 248px "sidebar" column even
+      when `.sidebar-nav` was `[hidden]` (display:none) — an explicit
+      pixel-sized grid track doesn't collapse just because nothing occupies
+      it, so every onboarding/auth screen was silently rendering with a
+      dead 248px gap plus its own centered narrow content, compounding the
+      "huge empty canvas" problem beyond just narrow content.
+   2. That empty gap meant `main#app`'s actual available width (and
+      therefore where `.screen`'s centered content visually sat) was offset
+      from the true viewport center by 124px — subtle but real.
+   `:has()` re-targets the grid onto a single "topbar"/"main" column
+   whenever the sidebar is genuinely hidden, and gives this specific screen
+   group (registration, login, welcome, and every sequential onboarding
+   step) a deliberate two-panel composition instead of one centered form
+   floating in leftover space: a brand/Qiyas visual panel + the actual
+   content, pinned to --content-narrow so it never stretches wide just
+   because the viewport is wide. Mobile/tablet (<1024px) are untouched —
+   the panel is display:none there and every screen keeps its existing
+   single-column layout. ============================================================ */
+@media (min-width: 1024px) {
+  .phone:has(.sidebar-nav[hidden]) {
+    grid-template-columns: 1fr;
+    grid-template-areas: "topbar" "main";
+  }
+  .phone:has(.sidebar-nav[hidden]) .companion-panel-backdrop,
+  .phone:has(.sidebar-nav[hidden]) .companion-panel { right: 0; }
+
+  .onboarding-visual { display: none; }
+
+  main#app:has(.screen[data-screen="welcome"]:not([hidden])),
+  main#app:has(.screen[data-screen="language-select"]:not([hidden])),
+  main#app:has(.screen[data-screen="gender-select"]:not([hidden])),
+  main#app:has(.screen[data-screen="register"]:not([hidden])),
+  main#app:has(.screen[data-screen="login"]:not([hidden])),
+  main#app:has(.screen[data-screen="grade-select"]:not([hidden])),
+  main#app:has(.screen[data-screen="target-score-select"]:not([hidden])),
+  main#app:has(.screen[data-screen="exam-date-select"]:not([hidden])),
+  main#app:has(.screen[data-screen="path-select"]:not([hidden])),
+  main#app:has(.screen[data-screen="mission-transition"]:not([hidden])),
+  main#app:has(.screen[data-screen="diagnostic-done"]:not([hidden])),
+  main#app:has(.screen[data-screen="mock-exam-intro"]:not([hidden])) {
+    display: flex;
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+  }
+  main#app:has(.screen[data-screen="welcome"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="language-select"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="gender-select"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="register"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="login"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="grade-select"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="target-score-select"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="exam-date-select"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="path-select"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="mission-transition"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="diagnostic-done"]:not([hidden])) .onboarding-visual,
+  main#app:has(.screen[data-screen="mock-exam-intro"]:not([hidden])) .onboarding-visual {
+    display: flex;
+  }
+  main#app:has(.screen[data-screen="welcome"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="language-select"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="gender-select"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="register"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="login"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="grade-select"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="target-score-select"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="exam-date-select"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="path-select"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="mission-transition"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="diagnostic-done"]:not([hidden])) > .screen:not([hidden]),
+  main#app:has(.screen[data-screen="mock-exam-intro"]:not([hidden])) > .screen:not([hidden]) {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: var(--content-narrow);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
+    overflow-y: auto;
+    min-height: 0;
+  }
+  /* `.screen` becoming a flex container above has one side effect: any
+     child that relies on ordinary block "fill available width, then
+     margin:auto to center" sizing (`.onboarding-progress`'s 220px-max
+     progress dots) instead gets flexbox's shrink-to-fit sizing once
+     `margin: 0 auto` is present — per spec, an `auto` cross-axis margin on
+     a flex item opts it OUT of `align-items: stretch`, so it falls back to
+     content-based (here: ~0, since its own children are empty flex-basis
+     spans) sizing instead of filling. An explicit width restores the
+     original fill-then-cap-at-max-width look. */
+  main#app:has(.onboarding-visual) .onboarding-progress { width: 100%; }
+
+  .onboarding-visual {
+    flex: 0 0 44%;
+    background: var(--brand-gradient);
+    background-image:
+      radial-gradient(circle at 18% 20%, rgba(255,255,255,0.10), transparent 40%),
+      radial-gradient(circle at 82% 78%, rgba(255,255,255,0.12), transparent 38%),
+      var(--brand-gradient);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    position: relative;
+  }
+  .onboarding-visual-avatar { width: var(--mascot-xl); height: var(--mascot-xl); flex-shrink: 0; }
+  .onboarding-visual-tagline {
+    font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+    font-weight: 600; font-size: var(--text-fluid-lg); color: white;
+    text-align: center; max-width: 320px; line-height: 1.6; margin: 0;
+  }
 }

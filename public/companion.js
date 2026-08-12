@@ -42,47 +42,150 @@ const Companion = (() => {
   let hideTimer = null;
   let enterTimer = null;
   let leaveTimer = null;
-  let lastVisibleMode = 'floating';
-  let lastVisibleAnchor = null;
-  const ANIMATION_STATES = ['idle', 'thinking', 'celebrating', 'pointing', 'typing'];
-
   let mascotInstanceCount = 0;
+  // Where a REACTIVE trigger (reactCorrect, celebrate, warnWeakSkill, ...)
+  // should surface the widget when the current screen keeps it 'hidden' by
+  // default (see COMPANION_PLACEMENT in app.js) — e.g. the dashboard wants
+  // that speech to appear next to its own hero avatar, not in a bottom
+  // corner that can overlap real content. Set per-screen via
+  // `setReactiveFallback()`; defaults to the historical floating corner.
+  let reactiveFallback = { mode: 'floating', anchor: null, size: 'passive' };
+  function setReactiveFallback(mode, anchor, size) {
+    reactiveFallback = { mode: mode || 'floating', anchor: anchor || null, size: size || 'passive' };
+  }
 
-  /** The mascot's SVG markup, shared by the floating widget, the dashboard
-   *  hero's inline avatar, and the companion card — one visual source of
-   *  truth, matching how public/visuals.js owns every diagram's markup.
-   *  Each call gets a unique gradient id (SVG `url(#id)` refs resolve to the
-   *  FIRST matching id in the whole document, so reusing one id across
-   *  multiple mascot instances on the same page would silently break every
-   *  instance after the first). */
+  /** Qiyas — "Compass-Star Beacon": the platform's original mascot (Visual
+   *  Identity Overhaul, corrective visual-QA pass). An intentionally
+   *  NON-circular, non-chatbot, non-robot silhouette: a soft rounded
+   *  4-point compass/star, brand gradient fill, ONE pair of small geometric
+   *  eye marks — no swapped cartoon eye/mouth shapes per state, and no
+   *  mouth at all. Corrective-QA finding: even the old "neutral" face (two
+   *  flat closed-eye dashes) read as a permanent smiling emoji by
+   *  pareidolia alone, with zero mouth path involved — the fix isn't a
+   *  different mouth, it's not encoding "closed happy eyes" as the resting
+   *  state. Expression now comes ONLY from transforms (rotate/scale/
+   *  translate) applied to these same two marks per `qiyas-anim-*` state —
+   *  see the "Qiyas mascot" CSS section in style.css — plus body tilt,
+   *  glow, sparkle accents and motion. See public/mascot-preview.html for
+   *  the full state × size showcase this was designed and approved
+   *  against; this markup is that exact SVG. One shared source of truth
+   *  for every consumer (floating widget, dashboard hero avatar, companion
+   *  card, panel header, mission-interview header, etc.) — each call gets
+   *  a unique gradient id since SVG `url(#id)` refs resolve to the first
+   *  match in the WHOLE document, and multiple mascot instances on one
+   *  page would otherwise break every instance after the first. */
   function mascotMarkup() {
-    const gradId = `companionGradient${mascotInstanceCount++}`;
+    const id = `qiyas${mascotInstanceCount++}`;
     return `
-      <svg viewBox="0 0 64 64" class="companion-avatar-svg" aria-hidden="true">
+      <svg viewBox="0 0 64 64" class="qiyas-svg" aria-hidden="true">
         <defs>
-          <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="grad${id}" x1="8%" y1="4%" x2="92%" y2="96%">
             <stop offset="0%" stop-color="#1E3A8A"/>
             <stop offset="100%" stop-color="#14B8A6"/>
           </linearGradient>
+          <radialGradient id="glow${id}" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#14B8A6" stop-opacity="0"/>
+          </radialGradient>
         </defs>
-        <circle cx="32" cy="32" r="30" fill="url(#${gradId})"/>
-        <path class="companion-swirl" d="M32 8a24 24 0 0 1 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-linecap="round"/>
-        <g class="companion-face companion-face-default">
-          <circle class="companion-eye" cx="23.5" cy="30" r="3.4" fill="white"/>
-          <circle class="companion-eye" cx="40.5" cy="30" r="3.4" fill="white"/>
-          <path d="M22 40q10 8 20 0" stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+        <circle class="qiyas-glow" cx="32" cy="32" r="31" fill="url(#glow${id})"/>
+        <circle class="qiyas-ring" cx="32" cy="32" r="28.5" fill="none" stroke="#14B8A6" stroke-width="2"/>
+        <g class="qiyas-float">
+          <g class="qiyas-body-group">
+            <path class="qiyas-body" fill="url(#grad${id})" d="
+              M28.02 13.72
+              Q32 6 35.98 13.72
+              L38.01 17.67
+              Q40.84 23.16 46.33 25.99
+              L50.28 28.02
+              Q58 32 50.28 35.98
+              L46.33 38.01
+              Q40.84 40.84 38.01 46.33
+              L35.98 50.28
+              Q32 58 28.02 50.28
+              L25.99 46.33
+              Q23.16 40.84 17.67 38.01
+              L13.72 35.98
+              Q6 32 13.72 28.02
+              L17.67 25.99
+              Q23.16 23.16 25.99 17.67
+              L28.02 13.72 Z"/>
+            <g class="qiyas-eyes">
+              <rect class="qiyas-eye qiyas-eye-l" x="26.85" y="26.2" width="2.9" height="7.6" rx="1.45"/>
+              <rect class="qiyas-eye qiyas-eye-r" x="34.25" y="26.2" width="2.9" height="7.6" rx="1.45"/>
+            </g>
+          </g>
         </g>
-        <g class="companion-face companion-face-thinking" hidden>
-          <path d="M20 30h7" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
-          <path d="M37 30h7" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
-          <circle cx="32" cy="41" r="2.6" fill="white"/>
-        </g>
-        <g class="companion-face companion-face-celebrating" hidden>
-          <path d="M19 29q4.5-5 9 0" stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-          <path d="M36 29q4.5-5 9 0" stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-          <path d="M21 38q11 11 22 0" stroke="white" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-        </g>
+        <path class="qiyas-sparkle qiyas-sparkle-1" fill="#14B8A6" stroke="#fff" stroke-width="1" stroke-linejoin="round"
+          d="M49 9 L50.5 13.2 L54.5 14.8 L50.5 16.4 L49 20.6 L47.5 16.4 L43.5 14.8 L47.5 13.2 Z"/>
+        <path class="qiyas-sparkle qiyas-sparkle-2" fill="#14B8A6" stroke="#fff" stroke-width="0.8" stroke-linejoin="round"
+          d="M15 44 L16 46.6 L18.6 47.6 L16 48.6 L15 51.2 L14 48.6 L11.4 47.6 L14 46.6 Z"/>
       </svg>`;
+  }
+
+  /** Applies a named Qiyas state to one already-rendered mascot instance —
+   *  swaps its `qiyas-anim-*` motion class. Every visual difference between
+   *  states (eye angle/scale/position, body tilt, glow, sparkle) lives
+   *  entirely in CSS — no DOM face-group swapping. `root` is any element
+   *  containing (or being) a `.qiyas-svg` — works on the floating widget,
+   *  the panel header, etc. alike.
+   *
+   *  Root-cause fix for the reported "Qiyas snaps back to its original
+   *  position/pose" bug: `thinking` and `concerned` are continuous
+   *  `@keyframes` loops (they're meant to visibly persist for as long as
+   *  the state is active) that are essentially NEVER at rest when a new
+   *  state interrupts them — and CSS gives a running `animation` priority
+   *  over any `transition` on the same property, so swapping straight out
+   *  of one used to make the browser jump the body-group INSTANTLY from
+   *  wherever the loop currently was to the next state's target, in the
+   *  same repaint (confirmed by sampling computed transforms across the
+   *  swap — every other state, which is transition-driven, already
+   *  interpolates smoothly; only a swap OUT of thinking/concerned didn't).
+   *  Fix: a small FLIP (First-Last-Invert-Play) — snapshot the body-group's
+   *  ACTUAL current rendered transform, remove the old state (stopping its
+   *  animation) and pin that snapshot as a plain inline style with
+   *  transitions off, force one reflow so the browser commits it as the
+   *  real starting point, then add the new state and hand control back to
+   *  the stylesheet. The result: motion always continues smoothly from
+   *  wherever Qiyas actually is, in both directions, no matter which state
+   *  was interrupted mid-flight. */
+  function applyQiyasState(root, state) {
+    if (!root) return;
+    const svg = root.classList && root.classList.contains('qiyas-svg') ? root : root.querySelector('.qiyas-svg');
+    if (!svg) return;
+    const wrapper = svg.parentElement || svg;
+    const bodyGroup = svg.querySelector('.qiyas-body-group');
+
+    let snapshot = null;
+    if (bodyGroup) {
+      const rendered = getComputedStyle(bodyGroup).transform;
+      if (rendered && rendered !== 'none') snapshot = rendered;
+    }
+
+    wrapper.className = (wrapper.className || '').toString().replace(/\bqiyas-anim-\S+/g, '').trim();
+
+    // NOTE: `bodyGroup` is an SVG <g> — SVGElement has no `.offsetWidth`
+    // (that's HTMLElement-only; reading it on a <g> is silently `undefined`
+    // and forces nothing). `getBoundingClientRect()` is the SVG-safe
+    // equivalent for forcing a synchronous layout/style flush.
+    if (bodyGroup && snapshot) {
+      bodyGroup.style.transition = 'none';
+      bodyGroup.style.transform = snapshot;
+      bodyGroup.getBoundingClientRect(); // commit the snapshot (with transitions off) as the real starting frame
+    }
+
+    wrapper.classList.add(`qiyas-anim-${state}`);
+
+    if (bodyGroup && snapshot) {
+      // Re-enable the transition and let it settle as "current" BEFORE releasing
+      // the transform override — two separate flushes either side of restoring
+      // `transition` is what actually makes the engine treat the upcoming
+      // transform change as a fresh, transitionable value change instead of
+      // folding every mutation in this task into one untransitioned jump.
+      bodyGroup.style.transition = '';
+      bodyGroup.getBoundingClientRect();
+      bodyGroup.style.transform = '';
+    }
   }
 
   const ENCOURAGEMENTS = [
@@ -99,7 +202,7 @@ const Companion = (() => {
   function createWidgetIfNeeded() {
     if (widgetEl) return;
     widgetEl = document.createElement('div');
-    widgetEl.className = 'companion-widget companion-idle';
+    widgetEl.className = 'companion-widget';
     widgetEl.innerHTML = `
       <div class="companion-bubble" id="companionBubble" hidden>
         <p class="companion-bubble-text" id="companionBubbleText"></p>
@@ -108,6 +211,7 @@ const Companion = (() => {
         ${mascotMarkup()}
       </button>
     `;
+    applyQiyasState(widgetEl.querySelector('#companionAvatarBtn'), 'idle');
     // Version 3 Phase E: tapping the avatar opens the action panel (see
     // openPanel() below) instead of just toggling the last-spoken bubble —
     // "the companion should become useful, not decorative." The bubble still
@@ -148,13 +252,28 @@ const Companion = (() => {
     widgetEl.style.top = `${Math.max(8, anchorRect.bottom - phoneRect.top + 10)}px`;
   }
 
+  /** Corrective visual-QA pass: contextual SIZE joins contextual PLACEMENT.
+   *  Every consumer of the floating widget picks one of these instead of the
+   *  widget always rendering at one fixed size regardless of context —
+   *  'passive' (48-56px desktop guidance — background presence: diagnostic,
+   *  mock-exam intro, the idle welcome greet), 'coach' (64-80px — actively
+   *  guiding but not the primary focus: the practice screen), 'teaching'
+   *  (80-96px — the mascot IS the current focal point: inline next to a
+   *  lesson title). Onboarding/celebration (120-160px) never uses the
+   *  floating widget at all — those are dedicated static avatars sized via
+   *  --mascot-xl directly (see .onboarding-visual-avatar, the result-screen
+   *  celebration avatars). */
+  const WIDGET_SIZE_CLASSES = ['companion-size-passive', 'companion-size-coach', 'companion-size-teaching'];
+
   /** Mounts (or re-mounts/repositions) the companion. `mode`: 'floating' (the
    *  default fixed bottom-corner), 'inline' (positioned next to `anchorSelector`
-   *  — a lesson title, an exam timer), or 'hidden' (fully invisible — while a
-   *  lesson step's text is actively being read). Plays a slide+fade entrance
-   *  each time it (re)appears — "enters and leaves the screen naturally"
-   *  instead of always sitting in the same spot. */
-  function enter(mode = 'floating', anchorSelector = null) {
+   *  — a lesson title, a practice counter), or 'hidden' (fully invisible —
+   *  most screens: a screen that wants Qiyas present says so explicitly
+   *  instead of the widget defaulting to visible everywhere). `size`: one of
+   *  'passive' | 'coach' | 'teaching', default 'passive'. Plays a slide+fade
+   *  entrance each time it (re)appears — "enters and leaves the screen
+   *  naturally" instead of always sitting in the same spot. */
+  function enter(mode = 'floating', anchorSelector = null, size = 'passive') {
     createWidgetIfNeeded();
     const phone = document.querySelector('.phone');
     if (!phone) return;
@@ -162,13 +281,13 @@ const Companion = (() => {
     if (!widgetEl.isConnected) phone.appendChild(widgetEl);
 
     widgetEl.classList.remove('companion-mode-floating', 'companion-mode-inline', 'companion-mode-hidden', 'companion-leaving');
+    widgetEl.classList.remove(...WIDGET_SIZE_CLASSES);
+    widgetEl.classList.add(`companion-size-${size}`);
 
     if (mode === 'hidden') {
       widgetEl.classList.add('companion-mode-hidden');
       return;
     }
-    lastVisibleMode = mode;
-    lastVisibleAnchor = anchorSelector;
 
     const anchor = mode === 'inline' && anchorSelector ? document.querySelector(anchorSelector) : null;
     if (anchor) {
@@ -203,50 +322,53 @@ const Companion = (() => {
     }, 300);
   }
 
-  /** Called by `say()` — if a screen never explicitly called `enter()`, fall
-   *  back to floating (today's default behavior). If it's currently hidden
-   *  (mid-"hide while reading"), speaking implies wanting to be seen, so it
-   *  returns to wherever it was last deliberately placed — "return when
-   *  useful" happening automatically the moment there's something to say. */
+  /** Called by `say()`. Most screens keep the floating widget 'hidden' by
+   *  default now (see COMPANION_PLACEMENT in app.js — contextual placement,
+   *  not a permanent corner pin) so a REACTIVE trigger firing on one of
+   *  those screens (a struggle nudge, a dashboard milestone) needs its own
+   *  fallback rather than trusting stale placement from whatever screen was
+   *  last visited. Speaking always means "be seen" — floating, passive size,
+   *  bottom corner — regardless of what the current screen's base placement
+   *  is. A screen that already mounted the widget in 'inline'/'coach' mode
+   *  is left exactly as it is (no redundant re-placement mid-conversation). */
   function ensureMounted() {
     createWidgetIfNeeded();
     if (!widgetEl.isConnected || widgetEl.classList.contains('companion-mode-hidden')) {
-      enter(lastVisibleMode, lastVisibleAnchor);
+      enter(reactiveFallback.mode, reactiveFallback.anchor, reactiveFallback.size);
     }
   }
 
-  function setFace(state) {
-    if (!widgetEl) return;
-    widgetEl.querySelectorAll('.companion-face').forEach((g) => {
-      g.hidden = !g.classList.contains(`companion-face-${state === 'celebrating' ? 'celebrating' : state === 'thinking' ? 'thinking' : 'default'}`);
-    });
+  /** `typing` has no dedicated Qiyas face — it's the "about to say
+   *  something" moment, so the mascot just glances (looking) while the
+   *  bubble text itself gets the pulse. Every other value is a real Qiyas
+   *  state name (see QIYAS_FACE_FOR_STATE) and passes through unchanged. */
+  function mascotStateFor(animation) {
+    return animation === 'typing' ? 'looking' : animation;
   }
 
-  /** animation: 'idle' | 'thinking' | 'celebrating' | 'pointing' | 'typing' —
-   *  each maps to a CSS class reusing an existing keyframe technique (see
-   *  style.css's "Educational Companion" section) rather than a new one.
-   *  Uses classList add/remove (not a full `className` replace) so it never
-   *  clobbers the `companion-mode-*` mount-state classes `enter()` set. */
+  /** animation: any Qiyas state name — 'idle' | 'blink' | 'looking' |
+   *  'thinking' | 'encouraging' | 'happy' | 'celebrating' | 'concerned' |
+   *  'pointing' | 'success' — plus 'typing' (bubble-text pulse + a subtle
+   *  mascot glance, see mascotStateFor above). */
   function say(text, { animation = 'typing', voice = true, autoHideMs = 6500 } = {}) {
     ensureMounted();
     if (!widgetEl) return;
     const bubble = widgetEl.querySelector('#companionBubble');
     const bubbleText = widgetEl.querySelector('#companionBubbleText');
+    const avatarBtn = widgetEl.querySelector('#companionAvatarBtn');
     bubbleText.textContent = text;
     bubble.hidden = false;
 
-    ANIMATION_STATES.forEach((s) => widgetEl.classList.remove(`companion-${s}`));
-    widgetEl.classList.add(`companion-${animation}`);
-    setFace(animation);
+    widgetEl.classList.toggle('companion-typing', animation === 'typing');
+    applyQiyasState(avatarBtn, mascotStateFor(animation));
 
     if (voice && window.Voice && Voice.supported) Voice.speak(text);
 
     clearTimeout(hideTimer);
     hideTimer = setTimeout(() => {
       bubble.hidden = true;
-      ANIMATION_STATES.forEach((s) => widgetEl.classList.remove(`companion-${s}`));
-      widgetEl.classList.add('companion-idle');
-      setFace('idle');
+      widgetEl.classList.remove('companion-typing');
+      applyQiyasState(avatarBtn, 'idle');
     }, autoHideMs);
   }
 
@@ -276,6 +398,7 @@ const Companion = (() => {
     const avatar = document.createElement('div');
     avatar.className = 'companion-inline-card-avatar';
     avatar.innerHTML = mascotMarkup();
+    applyQiyasState(avatar, 'encouraging');
     card.appendChild(avatar);
     const p = document.createElement('p');
     p.className = 'companion-inline-card-text';
@@ -318,6 +441,7 @@ const Companion = (() => {
         <div class="companion-panel-items" id="companionPanelItems"></div>
       </div>
     `;
+    applyQiyasState(panelEl.querySelector('.companion-panel-avatar'), 'happy');
     // Never trap the student inside: backdrop click, the X button, and (on
     // desktop) Escape all close the panel — see the keydown listener below.
     panelEl.addEventListener('click', (e) => { if (e.target === panelEl) closePanel(); });
@@ -441,7 +565,7 @@ const Companion = (() => {
     const text = memory.name
       ? `أهلًا ${memory.name}! جاهز نكمل رحلتك نحو القدرات؟`
       : 'أهلًا فيك! أنا قِيس، بكون معك خطوة بخطوة لين يوم الاختبار.';
-    say(text, { animation: 'idle' });
+    say(text, { animation: 'happy' });
   }
 
   function introduceTopic(skillNameAr, reasonAr) {
@@ -458,11 +582,11 @@ const Companion = (() => {
   }
 
   function encourage() {
-    say(ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)], { animation: 'idle' });
+    say(ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)], { animation: 'encouraging' });
   }
 
   function warnWeakSkill(skillNameAr) {
-    say(`يبدو إن "${skillNameAr}" محتاجة شوي تركيز — نراجعها اليوم؟`, { animation: 'pointing' });
+    say(`يبدو إن "${skillNameAr}" محتاجة شوي تركيز — نراجعها اليوم؟`, { animation: 'concerned' });
   }
 
   function introduceQuiz() {
@@ -471,7 +595,7 @@ const Companion = (() => {
 
   function explainMistake(text) {
     memory.recentMistake = text;
-    say(text, { animation: 'thinking' });
+    say(text, { animation: 'concerned' });
   }
 
   // ---------- Version 3 Phase A: reactive triggers ----------
@@ -482,10 +606,13 @@ const Companion = (() => {
   const CORRECT_REACTIONS = ['ممتاز! 🌟', 'أحسنت!', 'بالضبط!', 'قوي! 💪', 'كذا بالضبط!'];
 
   /** Reacts to a correct answer — today NOTHING reacted positively per-question
-   *  (only `explainMistake` reacted to wrong ones); this closes that gap. */
+   *  (only `explainMistake` reacted to wrong ones); this closes that gap.
+   *  Uses `success` (a calm ring-pulse), not the bigger `celebrating` burst —
+   *  this fires on every single correct answer, so it stays low-key; the big
+   *  reaction is reserved for real milestones (see celebrate() above). */
   function reactCorrect() {
     say(CORRECT_REACTIONS[Math.floor(Math.random() * CORRECT_REACTIONS.length)], {
-      animation: 'celebrating', autoHideMs: 2200, voice: false,
+      animation: 'success', autoHideMs: 2200, voice: false,
     });
   }
 
@@ -508,7 +635,7 @@ const Companion = (() => {
    *  later — so "offers help" is a concrete, tappable set of options
    *  (اشرح هذا الدرس / راجع أخطائي / اختبرني...), not just a sympathetic line. */
   function reactStruggle() {
-    say('لاحظت إن هذا الجزء يحتاج شوي تركيز — خلني أساعدك.', { animation: 'thinking', autoHideMs: 3000 });
+    say('لاحظت إن هذا الجزء يحتاج شوي تركيز — خلني أساعدك.', { animation: 'concerned', autoHideMs: 3000 });
     setTimeout(() => openPanel(), 1400);
   }
 
@@ -516,6 +643,10 @@ const Companion = (() => {
     updateMemory, greet, introduceTopic, explain, celebrate, encourage,
     warnWeakSkill, introduceQuiz, explainMistake, hide, mascotMarkup, renderInlineCard,
     enter, leave, reactCorrect, reactTimerPressure, reactInactivity, reactStruggle,
-    openPanel, closePanel,
+    openPanel, closePanel, setReactiveFallback,
+    // Exposed so any screen that renders a static (non-floating-widget) Qiyas
+    // instance via mascotMarkup() — the dashboard hero avatar, etc. — can set
+    // which of the 10 named states it should display.
+    applyState: applyQiyasState,
   };
 })();

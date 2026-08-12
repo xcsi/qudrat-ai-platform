@@ -40,24 +40,24 @@
       </button>
       <div class="sidebar-nav-divider"></div>
       <button class="sidebar-nav-item" data-nav-screen="reference-sheets" onclick="App.goToReferenceSheets()">
-        <span class="sidebar-nav-icon" aria-hidden="true">📄</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3.5V8h4M9 12h6M9 15.5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span data-i18n="more_reference">أوراقي المرجعية</span>
       </button>
       <button class="sidebar-nav-item" data-nav-screen="glossary" onclick="App.goToGlossary()">
-        <span class="sidebar-nav-icon" aria-hidden="true">📖</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 6.5c-1.5-1.3-3.5-2-6-2v13c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2v-13c-2.5 0-4.5.7-6 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 6.5v13" stroke="currentColor" stroke-width="1.8"/></svg>
         <span data-i18n="more_glossary">قاموسي</span>
       </button>
       <button class="sidebar-nav-item" data-nav-screen="resources" onclick="App.goToResources()">
-        <span class="sidebar-nav-icon" aria-hidden="true">🔗</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span data-i18n="more_resources">مصادر موثوقة</span>
       </button>
       <button class="sidebar-nav-item" data-nav-screen="settings" onclick="App.goToSettings()">
-        <span class="sidebar-nav-icon" aria-hidden="true">⚙️</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4M17.7 17.7l-1.4-1.4M7.7 7.7 6.3 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span data-i18n="more_settings">الإعدادات</span>
       </button>
       <div class="sidebar-nav-spacer"></div>
       <button class="sidebar-nav-item sidebar-nav-item-danger" id="sidebarLogoutItem" hidden onclick="App.logout()">
-        <span class="sidebar-nav-icon" aria-hidden="true">🔒</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 15.5 20.5 12 17 8.5M20 12h-9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span data-i18n="more_logout">تسجيل الخروج</span>
       </button>
     </nav>
@@ -72,14 +72,31 @@
 
     <main id="app">
 
+      <!-- Desktop-only (>=1024px) brand/visual composition panel for the
+           onboarding + auth screen group — see style.css's ":has()"-gated
+           rules near the end of the file. Hidden entirely on mobile/tablet;
+           a persistent sibling of the .screen sections (not per-screen
+           markup) so every onboarding screen shares the exact same panel
+           without duplicating it. Filled once via App.renderOnboardingVisual()
+           (app.js boot()) — same idempotent render-once pattern already used
+           for the dashboard hero avatar. -->
+      <aside class="onboarding-visual" id="onboardingVisualPanel" aria-hidden="true">
+        <div class="onboarding-visual-avatar" id="onboardingVisualAvatar"></div>
+        <p class="onboarding-visual-tagline" data-i18n="onboarding_visual_tagline">قِيس معك خطوة بخطوة نحو القدرات</p>
+      </aside>
+
       <!-- SCREEN: splash (first launch — logo, tagline, brief loading beat before
            the app decides where to route the student: language selection first
-           launch, or straight to dashboard on a returning session). -->
+           launch, or straight to dashboard on a returning session). Corrective
+           visual-QA pass: a deliberate brand moment (logo + mascot + promise +
+           a subtle animated progress motif) instead of three small elements
+           lost in a mostly-empty canvas — see .splash-content in style.css. -->
       <section class="screen" data-screen="splash">
         <div class="splash-content">
           <img src="/logo.png" alt="قياسي Qiyasy" class="splash-logo">
+          <div class="splash-mascot" id="splashMascot" aria-hidden="true"></div>
           <p class="splash-tagline" data-i18n="splash_tagline">منصتك نحو التميز</p>
-          <div class="splash-loader"><span></span><span></span><span></span></div>
+          <div class="splash-path" aria-hidden="true"><span class="splash-path-fill"></span></div>
         </div>
       </section>
 
@@ -242,21 +259,41 @@
         <button type="button" class="btn-primary" onclick="App.confirmExamDate()" data-i18n="exam_date_cta">متابعة ←</button>
       </section>
 
-      <!-- SCREEN: mission interview (target score + exam date are already known
-           by this point — see the two screens above — so this chat only needs
-           to nail down the remaining, genuinely conversational details like
-           weekly study hours and target program). -->
+      <!-- SCREEN: mission interview — a GUIDED INTERVIEW CARD, not a chat.
+           (target score + exam date are already known by this point — see
+           the two screens above — so this only needs to nail down the
+           remaining, genuinely conversational details like weekly study
+           hours and target program.) Backend reality: POST /api/mission is
+           a free-text LLM interview with no fixed question schema, so this
+           shows the LATEST assistant message as one active question card —
+           never a scrolling two-side conversation — with prior turns
+           collapsed into a compact "answered so far" strip instead of
+           stacked bubbles. Quick-reply chips are offered only where the
+           question can be safely pattern-matched (see App.missionChipsFor
+           in app.js); free text is always available as the fallback. -->
       <section class="screen" data-screen="mission" hidden>
-        <h2 class="screen-title" data-i18n="mission_title">لنتحدث عن هدفك</h2>
-        <p class="screen-sub" data-i18n="mission_sub">كم ساعة بتقدر تذاكر أسبوعيًا؟ وأي تخصص أو كلية بذهنك؟</p>
+        <div class="interview-card">
+          <div class="interview-card-head">
+            <div class="interview-avatar" id="missionAvatar"></div>
+            <div class="interview-head-text">
+              <span class="interview-name" data-i18n="mission_kicker">قِيس</span>
+              <span class="interview-tagline" data-i18n="mission_tagline">خلني أعرف هدفك</span>
+            </div>
+            <span class="interview-counter" id="missionCounter">سؤال ١</span>
+          </div>
 
-        <div class="chat" id="missionChat"></div>
+          <div class="interview-answered" id="missionAnswered"></div>
 
-        <form id="missionForm" class="input-row">
-          <input type="text" id="missionInput" data-i18n-placeholder="mission_placeholder" placeholder="مثال: أبي كلية طب، باقي شهر ونص على القدرات" autocomplete="off" required>
-          <button type="submit" class="btn-send" aria-label="إرسال">↳</button>
-        </form>
-        <button type="button" class="btn-primary" id="missionContinueBtn" onclick="App.continueFromMission()" hidden>متابعة ←</button>
+          <p class="interview-question" id="missionQuestion" data-i18n="mission_seed_question">لنتحدث عن هدفك — وش التخصص المطلوب وليش القدرات مهم الحين؟</p>
+
+          <div class="interview-chips" id="missionChips" hidden></div>
+
+          <form id="missionForm" class="interview-input-row">
+            <input type="text" id="missionInput" data-i18n-placeholder="mission_placeholder" placeholder="مثال: أبي كلية طب، باقي شهر ونص على القدرات" autocomplete="off" required>
+            <button type="submit" class="btn-primary interview-continue-btn" data-i18n="mission_continue">متابعة ←</button>
+          </form>
+        </div>
+        <button type="button" class="btn-primary" id="missionContinueBtn" onclick="App.continueFromMission()" hidden data-i18n="mission_done_continue">متابعة ←</button>
       </section>
 
       <!-- SCREEN: mission transition (onboarding ceremony — was a jarring instant
@@ -284,18 +321,25 @@
         </div>
       </section>
 
-      <!-- SCREEN: diagnostic -->
+      <!-- SCREEN: diagnostic — corrective visual-QA pass: wrapped in .quiz-shell
+           so desktop widths get a real bounded workspace (header bar + card)
+           instead of a bare stem+options pair floating in the page. -->
       <section class="screen" data-screen="diagnostic" hidden>
-        <div class="progress-bar"><div class="progress-fill" id="diagProgressFill"></div></div>
-        <p class="screen-eyebrow" id="diagCounter">سؤال 1 من 12</p>
-        <h2 class="quiz-stem" id="diagStem">—</h2>
-        <div class="options" id="diagOptions"></div>
-        <p class="feedback" id="diagFeedback" hidden></p>
+        <div class="quiz-shell">
+          <div class="quiz-progress-header">
+            <p class="quiz-progress-label" id="diagCounter">سؤال 1 من 12</p>
+            <div class="progress-bar"><div class="progress-fill" id="diagProgressFill"></div></div>
+          </div>
+          <h2 class="quiz-stem" id="diagStem">—</h2>
+          <div class="options" id="diagOptions"></div>
+          <p class="feedback" id="diagFeedback" hidden></p>
+        </div>
       </section>
 
       <!-- SCREEN: diagnostic done -->
       <section class="screen" data-screen="diagnostic-done" hidden>
         <div class="hero">
+          <div class="result-mascot" id="diagResultMascot" aria-hidden="true"></div>
           <p class="eyebrow" data-i18n="diagnostic_done_eyebrow">التشخيص خلص</p>
           <h1 id="diagScoreHeadline">—</h1>
           <p class="hero-sub" id="diagScoreSub">—</p>
@@ -373,22 +417,27 @@
 
       <!-- SCREEN: lesson quiz -->
       <section class="screen" data-screen="lesson-quiz" hidden>
-        <div class="progress-bar"><div class="progress-fill" id="lessonProgressFill"></div></div>
-        <div class="quiz-counter-row">
-          <p class="screen-eyebrow" id="lessonCounter">سؤال 1 من 6</p>
-          <span class="learning-mode-badge">وضع التعلّم</span>
-          <span class="learning-timer" id="lessonTimer">⏱ 60</span>
+        <div class="quiz-shell">
+          <div class="quiz-progress-header">
+            <div class="quiz-counter-row">
+              <p class="quiz-progress-label" id="lessonCounter">سؤال 1 من 6</p>
+              <span class="learning-mode-badge">وضع التعلّم</span>
+              <span class="learning-timer" id="lessonTimer">⏱ 60</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="lessonProgressFill"></div></div>
+          </div>
+          <h2 class="quiz-stem" id="lessonStem">—</h2>
+          <div class="options" id="lessonOptions"></div>
+          <button type="button" class="btn-hint" id="lessonHintBtn" onclick="App.requestLessonHint()" data-i18n="lesson_hint_btn">💡 تلميح</button>
+          <div id="lessonHintContainer"></div>
+          <div class="feedback" id="lessonFeedback" hidden></div>
         </div>
-        <h2 class="quiz-stem" id="lessonStem">—</h2>
-        <div class="options" id="lessonOptions"></div>
-        <button type="button" class="btn-hint" id="lessonHintBtn" onclick="App.requestLessonHint()" data-i18n="lesson_hint_btn">💡 تلميح</button>
-        <div id="lessonHintContainer"></div>
-        <div class="feedback" id="lessonFeedback" hidden></div>
       </section>
 
       <!-- SCREEN: lesson result -->
       <section class="screen" data-screen="lesson-result" hidden>
         <div class="hero">
+          <div class="result-mascot" id="lessonResultMascot" aria-hidden="true"></div>
           <div class="celebration-badge" id="celebrationBadge">✨</div>
           <p class="eyebrow" data-i18n="lesson_result_eyebrow">فحص الإتقان</p>
           <h1 id="lessonResultHeadline">—</h1>
@@ -578,12 +627,12 @@
       <!-- SCREEN: practice queue -->
       <section class="screen" data-screen="practice" hidden>
         <p class="screen-eyebrow" data-i18n="practice_eyebrow">مراجعة متباعدة</p>
-        <h2 class="screen-title" data-i18n="practice_title">مراجعة اليوم</h2>
+        <h2 class="screen-title" id="practiceTitle" data-i18n="practice_title">مراجعة اليوم</h2>
         <div class="empty-state" id="practiceEmptyNote" hidden>
           <span class="empty-state-icon">✅</span>
           <p class="empty-state-text" data-i18n="practice_empty">ما فيه شي مستحق اليوم — المراجعة المتباعدة تجدول أول مراجعة لأي مهارة "بكرة" وليس نفس يوم التعلم (هذا مبدأ علمي أساسي، مو نقص بالنظام). الرجاء المحاولة مرة أخرى غدًا.</p>
         </div>
-        <div id="practiceQuizArea"></div>
+        <div id="practiceQuizArea" class="quiz-shell"></div>
       </section>
 
       <!-- SCREEN: settings (language + gender-address preference, changeable anytime) -->
@@ -639,19 +688,24 @@
            already had strict whole-session timing + no hints + auto-advance;
            this phase names/labels that existing behavior, doesn't rebuild it) -->
       <section class="screen" data-screen="mock-exam-quiz" hidden>
-        <div class="exam-header">
-          <span class="simulation-mode-badge">وضع المحاكاة</span>
-          <span class="exam-timer" id="examTimer">--:--</span>
-          <span class="exam-counter" id="examCounter">1 / 20</span>
+        <div class="quiz-shell quiz-shell-exam">
+          <div class="quiz-progress-header">
+            <div class="quiz-counter-row">
+              <span class="simulation-mode-badge">وضع المحاكاة</span>
+              <p class="quiz-progress-label counter-ltr" id="examCounter">1 / 20</p>
+              <span class="exam-timer" id="examTimer">--:--</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="examProgressFill"></div></div>
+          </div>
+          <h2 class="quiz-stem" id="examStem">—</h2>
+          <div class="options" id="examOptions"></div>
         </div>
-        <div class="progress-bar"><div class="progress-fill" id="examProgressFill"></div></div>
-        <h2 class="quiz-stem" id="examStem">—</h2>
-        <div class="options" id="examOptions"></div>
       </section>
 
       <!-- SCREEN: mock exam review -->
       <section class="screen" data-screen="mock-exam-review" hidden>
         <div class="hero">
+          <div class="result-mascot" id="examResultMascot" aria-hidden="true"></div>
           <p class="eyebrow" data-i18n="mock_exam_review_eyebrow">نتيجة الاختبار التجريبي</p>
           <h1 id="examScoreHeadline">—</h1>
           <p class="hero-sub" data-i18n="mock_exam_review_sub">مراجعة كل سؤال أدناه</p>
@@ -696,19 +750,24 @@
     <div class="more-sheet" id="moreSheet" hidden>
       <div class="more-sheet-handle"></div>
       <button class="more-sheet-item" onclick="App.goToReferenceSheets(); App.toggleMoreSheet()">
-        <span class="more-sheet-icon">📄</span> <span data-i18n="more_reference">أوراقي المرجعية</span>
+        <svg class="more-sheet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3.5V8h4M9 12h6M9 15.5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span data-i18n="more_reference">أوراقي المرجعية</span>
       </button>
       <button class="more-sheet-item" onclick="App.goToGlossary(); App.toggleMoreSheet()">
-        <span class="more-sheet-icon">📖</span> <span data-i18n="more_glossary">قاموسي</span>
+        <svg class="more-sheet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 6.5c-1.5-1.3-3.5-2-6-2v13c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2v-13c-2.5 0-4.5.7-6 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 6.5v13" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span data-i18n="more_glossary">قاموسي</span>
       </button>
       <button class="more-sheet-item" onclick="App.goToResources(); App.toggleMoreSheet()">
-        <span class="more-sheet-icon">🔗</span> <span data-i18n="more_resources">مصادر موثوقة</span>
+        <svg class="more-sheet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span data-i18n="more_resources">مصادر موثوقة</span>
       </button>
       <button class="more-sheet-item" onclick="App.goToSettings(); App.toggleMoreSheet()">
-        <span class="more-sheet-icon">⚙️</span> <span data-i18n="more_settings">الإعدادات</span>
+        <svg class="more-sheet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4M17.7 17.7l-1.4-1.4M7.7 7.7 6.3 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span data-i18n="more_settings">الإعدادات</span>
       </button>
       <button class="more-sheet-item more-sheet-item-danger" id="logoutMenuItem" hidden onclick="App.logout(); App.toggleMoreSheet()">
-        <span class="more-sheet-icon">🔒</span> <span data-i18n="more_logout">تسجيل الخروج</span>
+        <svg class="more-sheet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 15.5 20.5 12 17 8.5M20 12h-9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="more_logout">تسجيل الخروج</span>
       </button>
     </div>
   </div>

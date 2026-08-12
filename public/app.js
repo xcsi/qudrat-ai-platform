@@ -181,14 +181,85 @@ const App = (() => {
     'journey': 'dashboard', // reached via a link off the dashboard, not its own nav item — "الرئيسية" stays highlighted so there's an obvious way back
   };
 
-  // Educational Companion (Version 3 Phase A): where the mascot lives is a
-  // property of the SCREEN, decided in one place — screens don't each decide
-  // their own companion placement, they just get it for free by being listed
-  // here (or fall back to floating, the same default as before this phase).
+  // Educational Companion (Version 3 Phase A; corrective visual-QA pass):
+  // where the mascot lives — and how big it is — is a property of the
+  // SCREEN, decided in one place. Corrective-QA finding: the old fallback
+  // was ['floating', null] — meaning every screen NOT listed here got the
+  // same bottom-corner floating widget by default, which is exactly the
+  // "feels like a floating support chatbot pinned to one corner everywhere"
+  // complaint. The default below is now ['hidden', null] instead: a screen
+  // only gets a companion presence by explicitly earning one, each with the
+  // placement AND size (`passive` 48-56 / `coach` 64-80 / `teaching` 80-96,
+  // desktop guidance) that fits its actual role on that screen. Screens
+  // that already render their OWN dedicated Qiyas avatar in-flow (mission's
+  // .interview-avatar, dashboard's hero + companion-card avatars, the
+  // results screens' .result-mascot) deliberately stay 'hidden' here too —
+  // otherwise the floating widget would double up a second Qiyas on top of
+  // the one already integrated into that screen's composition.
   const COMPANION_PLACEMENT = {
-    'lesson-intro': ['inline', '#lessonTitle'],
-    'lesson-quiz': ['inline', '#lessonTitle'],
-    'mock-exam-quiz': ['inline', '#examTimer'],
+    // ONBOARDING / auth: the desktop-only .onboarding-visual panel (a
+    // dedicated 144px avatar, "part of the main composition") already
+    // covers this screen group — see the :has() block at the end of
+    // style.css. 'welcome' is the one deliberate exception: it's the single
+    // screen that greets out loud (see showScreen below), so it keeps the
+    // floating widget as the vehicle for that speech bubble.
+    welcome: ['floating', null, 'passive'],
+    'language-select': ['hidden', null],
+    'gender-select': ['hidden', null],
+    register: ['hidden', null],
+    login: ['hidden', null],
+    'grade-select': ['hidden', null],
+    'target-score-select': ['hidden', null],
+    'exam-date-select': ['hidden', null],
+    'path-select': ['hidden', null],
+
+    // MISSION: "beside/inside the guided interview card" — already true via
+    // the dedicated .interview-avatar in the card header; no floating dupe.
+    mission: ['hidden', null],
+    'mission-transition': ['hidden', null],
+
+    // DIAGNOSTIC: assessment-like — minimal/passive presence, same
+    // treatment as the mock exam below, never inline over the question.
+    diagnostic: ['floating', null, 'passive'],
+    // Results moments get their own large .result-mascot (see
+    // renderResultMascot() calls) — no floating dupe here either.
+    'diagnostic-done': ['hidden', null],
+
+    // LESSON: "near the relevant concept or guidance area" — inline next to
+    // the lesson title, sized as the active teaching moment it is.
+    'lesson-intro': ['inline', '#lessonTitle', 'teaching'],
+    'lesson-quiz': ['inline', '#lessonTitle', 'teaching'],
+    // finishLesson() calls Companion.celebrate() right after showing this
+    // screen — surface that speech next to the big .result-mascot instead
+    // of a separate bottom-corner popup.
+    'lesson-result': ['hidden', null, 'passive', ['inline', '#lessonResultMascot', 'passive']],
+
+    // Base presence is 'hidden' (the hero + companion-card avatars already
+    // give Qiyas a controlled, contextual presence here — see the "DASHBOARD"
+    // spec) but reactive speech (greet/celebrate/warnWeakSkill/encourage)
+    // still needs somewhere to surface — anchor it to the hero avatar
+    // instead of the historical bottom-left corner, which could overlap the
+    // streak/XP cards. See the reactiveFallback 4th slot below.
+    dashboard: ['hidden', null, 'passive', ['inline', '#heroCompanionAvatar', 'passive']],
+    journey: ['hidden', null],
+    notifications: ['hidden', null],
+    'ask-teacher': ['hidden', null],
+    resources: ['hidden', null],
+    glossary: ['hidden', null],
+    'reference-sheets': ['hidden', null],
+    settings: ['hidden', null],
+
+    // PRACTICE: "near feedback/progress, without covering answers" — inline
+    // next to the screen's own title (top of the card, never over options).
+    practice: ['inline', '#practiceTitle', 'coach'],
+
+    // MOCK EXAM: "minimal/passive; exam focus takes priority." The intro is
+    // a calm passive presence; the timed quiz itself hides Qiyas entirely
+    // so nothing competes with the timer/question during a real attempt;
+    // the review gets its own .result-mascot like the other results screens.
+    'mock-exam-intro': ['floating', null, 'passive'],
+    'mock-exam-quiz': ['hidden', null],
+    'mock-exam-review': ['hidden', null],
   };
 
   // Educational Companion (Version 3 Phase A): reacts once after a stretch of
@@ -226,8 +297,13 @@ const App = (() => {
     // Placement runs AFTER the target screen is revealed — an 'inline' anchor
     // (e.g. #lessonTitle) is still hidden (a zero-size rect) until the line above
     // toggles it visible, so measuring it any earlier silently collapses to (0,0).
-    const [placementMode, placementAnchor] = COMPANION_PLACEMENT[name] || ['floating', null];
-    Companion.enter(placementMode, placementAnchor);
+    const [placementMode, placementAnchor, placementSize, reactiveFallback] = COMPANION_PLACEMENT[name] || ['hidden', null];
+    Companion.enter(placementMode, placementAnchor, placementSize);
+    // Where a REACTIVE trigger should surface Qiyas if this screen keeps it
+    // hidden by default (see the 4th COMPANION_PLACEMENT slot above) — falls
+    // back to the classic floating corner when a screen doesn't specify one.
+    const [rMode, rAnchor, rSize] = reactiveFallback || ['floating', null, 'passive'];
+    Companion.setReactiveFallback(rMode, rAnchor, rSize);
 
     const showNav = NAV_SCREENS.includes(name);
     const nav = document.getElementById('bottomNav');
@@ -260,6 +336,22 @@ const App = (() => {
   }
 
   function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+  /** Corrective visual-QA pass — "RESULTS: visible celebration/encouragement."
+   *  Renders a real, celebration-sized (120-160px) Qiyas directly into a
+   *  result screen's `.result-mascot` slot (idempotent: renders once per
+   *  page load, then just re-applies the state on repeat calls — same
+   *  pattern as the dashboard hero avatar). `qiyasState`: any Companion
+   *  state name, typically 'celebrating' or 'happy'. */
+  function renderResultMascot(containerId, qiyasState) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!el.dataset.rendered) {
+      el.innerHTML = Companion.mascotMarkup();
+      el.dataset.rendered = 'true';
+    }
+    Companion.applyState(el, qiyasState);
+  }
 
   // ---------- first-launch onboarding: splash / language / gender ----------
   // Splash always shows briefly (feels like a real app launching, not a bare
@@ -304,8 +396,34 @@ const App = (() => {
     document.getElementById('changePasswordMessage').hidden = true;
   }
 
+  /** Renders Qiyas once into the desktop-only onboarding/auth visual panel
+   *  (see index.html's #onboardingVisualPanel + style.css's ":has()"-gated
+   *  composition rules) — same idempotent render-once pattern as the
+   *  dashboard hero avatar. Harmless to call on every boot even on mobile,
+   *  where the panel is simply never shown (display:none). */
+  function renderOnboardingVisual() {
+    const avatarEl = document.getElementById('onboardingVisualAvatar');
+    if (!avatarEl || avatarEl.dataset.rendered) return;
+    avatarEl.innerHTML = Companion.mascotMarkup();
+    Companion.applyState(avatarEl, 'encouraging');
+    avatarEl.dataset.rendered = 'true';
+  }
+
+  /** Renders Qiyas once into the splash screen's brand-moment composition
+   *  (see .splash-mascot in style.css) — same idempotent render-once
+   *  pattern as the onboarding visual panel and dashboard hero avatar. */
+  function renderSplashMascot() {
+    const el = document.getElementById('splashMascot');
+    if (!el || el.dataset.rendered) return;
+    el.innerHTML = Companion.mascotMarkup();
+    Companion.applyState(el, 'encouraging');
+    el.dataset.rendered = 'true';
+  }
+
   async function boot() {
     I18N.applyLang();
+    renderOnboardingVisual();
+    renderSplashMascot();
     showScreen('splash');
     await sleep(1100);
     if (!hasOnboarded()) {
@@ -483,22 +601,42 @@ const App = (() => {
     await beginMissionWithPrefill();
   }
 
-  function goToMission() {
+  const MISSION_SEED_QUESTION = 'لنتحدث عن هدفك — وش التخصص المطلوب وليش القدرات مهم الحين؟';
+
+  /** Guided-interview-card setup shared by goToMission() and
+   *  beginMissionWithPrefill() below — resets the "answered so far" strip,
+   *  chips, counter and question text, and renders Qiyas's static header
+   *  avatar (once — same pattern as the dashboard hero avatar). */
+  function resetMissionScreen() {
     showScreen('mission');
-    const chat = document.getElementById('missionChat');
-    chat.innerHTML = '';
-    addBubble('assistant', 'لنتحدث عن هدفك — وش التخصص المطلوب وليش القدرات مهم الحين؟');
+    state.missionQuestionCount = 1;
+    document.getElementById('missionAnswered').innerHTML = '';
+    document.getElementById('missionForm').hidden = false;
+    document.getElementById('missionContinueBtn').hidden = true;
+    document.getElementById('missionInput').disabled = false;
+    document.getElementById('missionInput').value = '';
+    setMissionCounter(1);
+    setMissionQuestion(MISSION_SEED_QUESTION);
+    const avatarEl = document.getElementById('missionAvatar');
+    if (!avatarEl.dataset.rendered) {
+      avatarEl.innerHTML = Companion.mascotMarkup();
+      avatarEl.dataset.rendered = 'true';
+    }
+    Companion.applyState(avatarEl, 'pointing');
   }
 
-  /** Opens the mission chat already "one message in" — the target score and
-   *  exam date the student just picked, phrased as if she said them herself.
-   *  The mission-interview prompt already treats any value given in an earlier
+  function goToMission() {
+    resetMissionScreen();
+  }
+
+  /** Opens the interview already "one turn in" — the target score and exam
+   *  date the student just picked, phrased as if she said them herself. The
+   *  mission-interview prompt already treats any value given in an earlier
    *  turn as confirmed and never re-asks for it, so this reliably skips
    *  straight to whatever's genuinely still missing (weekly study hours,
    *  target program) instead of asking about a score/date already picked. */
   async function beginMissionWithPrefill() {
-    showScreen('mission');
-    document.getElementById('missionChat').innerHTML = '';
+    resetMissionScreen();
     const targetScore = state.pendingTargetScore ?? 80;
     const examDate = state.pendingExamDate;
     const seedMessage = examDate
@@ -507,42 +645,96 @@ const App = (() => {
     await sendMissionMessage(seedMessage, 'جاري تجهيز خطتك...');
   }
 
-  /** Shared send path for both the real chat form and the pre-filled opener
-   *  above — same request, same done/continue handling either way. */
+  function setMissionQuestion(text) {
+    document.getElementById('missionQuestion').textContent = text;
+    renderMissionChips(text);
+  }
+
+  function setMissionCounter(n) {
+    document.getElementById('missionCounter').textContent = `سؤال ${n}`;
+  }
+
+  /** Adds the student's just-given answer to the collapsed "answered so far"
+   *  strip — replaces the old scrolling chat-bubble history. Only the
+   *  answer is shown (not the question text) to stay compact. */
+  function addMissionAnsweredItem(answerText) {
+    const list = document.getElementById('missionAnswered');
+    const item = document.createElement('div');
+    item.className = 'interview-answered-item';
+    item.innerHTML = `<span class="interview-answered-item-check">✓</span><span></span>`;
+    item.lastElementChild.textContent = answerText;
+    list.appendChild(item);
+  }
+
+  /** Optional quick-reply chips over the exact same free-text message the
+   *  backend already accepts (POST /api/mission has no structured-option
+   *  schema — this is presentation only, never a new API shape). Pattern-
+   *  matched from the question text itself; returns null when no safe
+   *  pattern applies, and the free-text field remains the only path. */
+  function missionChipsFor(questionText) {
+    if (/ساع/.test(questionText)) {
+      return ['2–4 ساعات أسبوعيًا', '5–7 ساعات أسبوعيًا', '8–10 ساعات أسبوعيًا', 'أكثر من 10 ساعات'];
+    }
+    return null;
+  }
+
+  function renderMissionChips(questionText) {
+    const container = document.getElementById('missionChips');
+    const chips = missionChipsFor(questionText);
+    container.innerHTML = '';
+    if (!chips) { container.hidden = true; return; }
+    chips.forEach((label) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'interview-chip';
+      btn.textContent = label;
+      btn.onclick = () => sendMissionMessage(label);
+      container.appendChild(btn);
+    });
+    container.hidden = false;
+  }
+
+  /** Shared send path for both the real form and the pre-filled opener /
+   *  chip clicks above — same request, same done/continue handling either
+   *  way. Records the answer in the "answered so far" strip, then shows the
+   *  next question as the new active card (or hands off to the continue
+   *  button once the interview is actually done). */
   async function sendMissionMessage(message, loadingLabel) {
     const input = document.getElementById('missionInput');
-    addBubble('user', message);
+    addMissionAnsweredItem(message);
+    document.getElementById('missionChips').hidden = true;
+    input.value = '';
     input.disabled = true;
-    setLoading(true, loadingLabel || 'جاري التفكير في ردك...');
+    Companion.applyState(document.getElementById('missionAvatar'), 'thinking');
+    // Human-centered art-direction pass: "thinking about your answer" reads
+    // as an AI-processing status, not a tutor replying — same fix as the
+    // ask-teacher loading label below.
+    setLoading(true, loadingLabel || 'قِيس يكتب ردّه...');
     try {
       const result = await api('POST', '/api/mission', { message });
-      addBubble('assistant', result.message);
+      setMissionQuestion(result.message);
       if (result.done) {
         // Real bug found via product feedback: this used to auto-transition
         // on a flat 900ms timer regardless of how long the final message
         // was — a longer closing reply would still get yanked away before
         // the student finished reading it. Never auto-transition: show a
         // "متابعة" button and let the student decide when they're ready.
+        Companion.applyState(document.getElementById('missionAvatar'), 'happy');
         document.getElementById('missionForm').hidden = true;
         document.getElementById('missionContinueBtn').hidden = false;
       } else {
+        state.missionQuestionCount = (state.missionQuestionCount || 1) + 1;
+        setMissionCounter(state.missionQuestionCount);
+        Companion.applyState(document.getElementById('missionAvatar'), 'pointing');
         input.disabled = false;
         input.focus();
       }
     } catch (err) {
       input.disabled = false;
+      Companion.applyState(document.getElementById('missionAvatar'), 'concerned');
     } finally {
       setLoading(false);
     }
-  }
-
-  function addBubble(role, text) {
-    const chat = document.getElementById('missionChat');
-    const div = document.createElement('div');
-    div.className = `bubble bubble-${role}`;
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -641,17 +833,29 @@ const App = (() => {
         addChatBubble('askTeacherChat', 'user', message);
         input.value = '';
         input.disabled = true;
-        setLoading(true, 'جاري التفكير بسؤالك...');
+        // Human-centered art-direction pass: an inline "typing" bubble inside
+        // the chat itself — same pattern as ask-lesson below — instead of a
+        // full-screen blocking overlay reading "thinking about your
+        // question," which looked exactly like an AI-generation wait screen
+        // for what is, from the student's side, just a chat reply.
+        const chat = document.getElementById('askTeacherChat');
+        const typingBubble = document.createElement('div');
+        typingBubble.className = 'bubble bubble-assistant bubble-typing';
+        typingBubble.textContent = 'قِيس يكتب...';
+        chat.appendChild(typingBubble);
+        chat.scrollTop = chat.scrollHeight;
         try {
           const result = await api('POST', '/api/ask-teacher', { message });
+          typingBubble.remove();
           addChatBubble('askTeacherChat', 'assistant', result.reply);
           if (result.priorKnowledgeDetected) {
             addChatBubble('askTeacherChat', 'assistant', '(لاحظت إنك تعرفين هذا الموضوع مسبقًا — سجّلت هذا كدليل بملفك.)');
           }
+        } catch (err) {
+          typingBubble.remove();
         } finally {
           input.disabled = false;
           input.focus();
-          setLoading(false);
         }
       });
     }
@@ -673,7 +877,7 @@ const App = (() => {
         const chat = document.getElementById('askLessonChat');
         const typingBubble = document.createElement('div');
         typingBubble.className = 'bubble bubble-assistant bubble-typing';
-        typingBubble.textContent = '...جاري التفكير';
+        typingBubble.textContent = 'قِيس يكتب...';
         chat.appendChild(typingBubble);
         chat.scrollTop = chat.scrollHeight;
         try {
@@ -788,9 +992,11 @@ const App = (() => {
 
   async function answerDiagnostic(itemId, selectedIndex, btnEl) {
     document.querySelectorAll('#diagOptions .option-btn').forEach((b) => (b.disabled = true));
+    btnEl.classList.add('selected'); // immediate feedback while the network round-trip is in flight
     const result = await api('POST', `/api/diagnostic/${state.diagnosticSessionId}/answer`, {
       itemId, selectedIndex, responseTimeMs: elapsedSinceShown(),
     });
+    btnEl.classList.remove('selected');
     btnEl.classList.add(result.isCorrect ? 'correct' : 'incorrect');
     if (!result.isCorrect) {
       document.querySelectorAll('#diagOptions .option-btn')[result.correctOptionIndex]?.classList.add('correct');
@@ -809,6 +1015,7 @@ const App = (() => {
   async function finishDiagnostic() {
     const result = await api('POST', `/api/diagnostic/${state.diagnosticSessionId}/complete`);
     showScreen('diagnostic-done');
+    renderResultMascot('diagResultMascot', 'celebrating');
     document.getElementById('diagScoreHeadline').textContent = `${result.scoreEstimate}%`;
     document.getElementById('diagScoreSub').textContent =
       `تقدير أولي غير معاير — بنيت عليه ${result.recordsWritten} نقطة بداية لخطتك الشخصية.`;
@@ -1062,7 +1269,7 @@ const App = (() => {
     // return when useful" happening on every single step, not just once.
     Companion.enter('hidden');
     clearTimeout(state.companionReturnTimer);
-    state.companionReturnTimer = setTimeout(() => Companion.enter('inline', '#lessonTitle'), 1200);
+    state.companionReturnTimer = setTimeout(() => Companion.enter('inline', '#lessonTitle', 'teaching'), 1200);
 
     if (step.type === 'hero') {
       // Version 6 Phase N: a real Hero step, universal to every lesson —
@@ -1070,7 +1277,10 @@ const App = (() => {
       // sourced from the same ZPD reason string the old static banner showed.
       nextBtn.hidden = false; skipBtn.hidden = false;
       container.appendChild(LessonRenderer.renderSection({
-        component: 'HeroCard', body: step.reasonAr,
+        // Real bug found via actual rendered output (not code review): buildHeroCard
+        // reads `body_ar`/`title_ar` — passing `body` here left the hero step's
+        // ZPD-reason card rendering with an empty <p>, invisible on screen.
+        component: 'HeroCard', body_ar: step.reasonAr,
       }));
     } else if (step.type === 'objective') {
       nextBtn.hidden = false; skipBtn.hidden = false;
@@ -1272,11 +1482,13 @@ const App = (() => {
   async function answerLesson(itemId, selectedIndex, btnEl) {
     stopLearningTimer();
     document.querySelectorAll('#lessonOptions .option-btn').forEach((b) => (b.disabled = true));
+    btnEl.classList.add('selected');
     const item = state.lessonItems[state.lessonIndex];
     const result = await api('POST', `/api/lesson-session/${state.lessonSessionId}/answer`, {
       itemId, selectedIndex, responseTimeMs: elapsedSinceShown(),
     });
     if (result.isCorrect) state.lessonCorrectCount++;
+    btnEl.classList.remove('selected');
     btnEl.classList.add(result.isCorrect ? 'correct' : 'incorrect', 'answer-pop');
     if (!result.isCorrect) {
       document.querySelectorAll('#lessonOptions .option-btn')[result.correctOptionIndex]?.classList.add('correct');
@@ -1334,6 +1546,7 @@ const App = (() => {
     const accuracy = Math.round((state.lessonCorrectCount / state.lessonItems.length) * 100);
     document.getElementById('lessonResultHeadline').textContent = `${accuracy}%`;
     const badge = document.getElementById('celebrationBadge');
+    renderResultMascot('lessonResultMascot', accuracy >= 60 ? 'celebrating' : 'encouraging');
 
     if (result.recordsWritten.length > 0) {
       const r = result.recordsWritten[0];
@@ -1479,6 +1692,7 @@ const App = (() => {
     const heroAvatar = document.getElementById('heroCompanionAvatar');
     if (!heroAvatar.dataset.rendered) {
       heroAvatar.innerHTML = Companion.mascotMarkup();
+      Companion.applyState(heroAvatar, 'idle');
       heroAvatar.dataset.rendered = 'true';
     }
     // The hero's subline doubles as "today's recommendation" when one exists —
@@ -1814,11 +2028,15 @@ const App = (() => {
     markQuestionShown();
     const entry = practiceQueueState.items[practiceQueueState.index];
     const quizArea = document.getElementById('practiceQuizArea');
+    const pct = (practiceQueueState.index / practiceQueueState.items.length) * 100;
     quizArea.innerHTML = `
-      <div class="quiz-counter-row">
-        <p class="screen-eyebrow counter-ltr">${practiceQueueState.index + 1} / ${practiceQueueState.items.length}</p>
-        <span class="learning-mode-badge">وضع التعلّم</span>
-        <span class="learning-timer" id="practiceTimer">⏱ 60</span>
+      <div class="quiz-progress-header">
+        <div class="quiz-counter-row">
+          <p class="quiz-progress-label counter-ltr">${practiceQueueState.index + 1} / ${practiceQueueState.items.length}</p>
+          <span class="learning-mode-badge">وضع التعلّم</span>
+          <span class="learning-timer" id="practiceTimer">⏱ 60</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
       </div>
       <h2 class="quiz-stem">${escapeHtml(entry.stem_ar)}</h2>
       <div class="options" id="practiceOptions"></div>
@@ -1839,10 +2057,12 @@ const App = (() => {
   async function answerPractice(itemId, selectedIndex, btnEl) {
     stopLearningTimer();
     document.querySelectorAll('#practiceOptions .option-btn').forEach((b) => (b.disabled = true));
+    btnEl.classList.add('selected');
     const result = await api('POST', '/api/practice/answer', {
       itemId, selectedIndex, responseTimeMs: elapsedSinceShown(), sessionId: practiceQueueState.sessionId,
     });
     practiceQueueState.sessionId = result.sessionId;
+    btnEl.classList.remove('selected');
     btnEl.classList.add(result.isCorrect ? 'correct' : 'incorrect');
     if (!result.isCorrect) {
       document.querySelectorAll('#practiceOptions .option-btn')[result.correctOptionIndex]?.classList.add('correct');
@@ -1916,14 +2136,18 @@ const App = (() => {
       btn.className = 'option-btn';
       btn.dataset.letter = ['أ','ب','ج','د'][idx] ?? '';
       btn.textContent = optText;
-      btn.onclick = () => answerExamItem(item.id, idx);
+      btn.onclick = () => answerExamItem(item.id, idx, btn);
       optionsEl.appendChild(btn);
     });
   }
 
-  async function answerExamItem(itemId, selectedIndex) {
+  async function answerExamItem(itemId, selectedIndex, btnEl) {
     // Deliberately no per-question feedback during a real exam — matches the brief's
     // "review comes after," per FR-07's "score estimate and review" (not instant feedback).
+    // A 'selected' highlight (never correct/incorrect) still gives the tap an immediate,
+    // visible response instead of feeling unresponsive during the network round-trip.
+    document.querySelectorAll('#examOptions .option-btn').forEach((b) => (b.disabled = true));
+    if (btnEl) btnEl.classList.add('selected');
     await api('POST', `/api/mock-exam/${mockExamState.sessionId}/answer`, {
       itemId, selectedIndex, responseTimeMs: elapsedSinceShown(),
     });
@@ -1941,6 +2165,7 @@ const App = (() => {
     try {
       const result = await api('POST', `/api/mock-exam/${mockExamState.sessionId}/complete`);
       showScreen('mock-exam-review');
+      renderResultMascot('examResultMascot', result.scoreEstimate >= 60 ? 'celebrating' : 'encouraging');
       document.getElementById('examScoreHeadline').textContent = `${result.scoreEstimate}%`;
 
       // Timing analytics (Version 3 Phase C): grouped client-side from the

@@ -570,7 +570,11 @@ const Cards = (() => {
    *  both up to the real values right after insertion (Version 2 Phase 3:
    *  "animate XP increasing, never instantly jump"). */
   function XPCard(xp, level) {
-    const card = el('div', 'card card-dark xp-card');
+    // Human-centered art-direction pass: no longer its own dark "card" —
+    // lives inside the shared .stat-cards-row strip alongside StreakCard
+    // (see index.html/style.css) instead of stacking two full, separately-
+    // bordered dark/light cards. One container, two halves.
+    const card = el('div', 'xp-card');
     const top = el('div', 'xp-card-top');
     top.appendChild(textNode('span', 'xp-card-level', `المستوى ${level.level}`));
     const total = textNode('span', 'xp-card-total', '0 XP');
@@ -593,7 +597,7 @@ const Cards = (() => {
    *  imperative verbs ("ابدأي"/"حافظي") the original text used — this app
    *  never assumes a gender before the student opts in (see Student.gender). */
   function StreakCard(streak) {
-    const card = el('div', 'card streak-card');
+    const card = el('div', 'streak-card');
     const active = streak.current > 0;
     const icon = textNode('span', `streak-card-icon${active ? ' active' : ''}`, active ? '🔥' : '🌱');
     card.appendChild(icon);
