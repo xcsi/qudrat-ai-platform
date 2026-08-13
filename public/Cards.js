@@ -451,9 +451,14 @@ const Cards = (() => {
     // hint endpoint already returns (curated vs. live AI fallback, grounded via
     // the shared GroundingService) but which was previously fetched and discarded.
     if (source) {
+      // Final AI-wrapper audit: this used to literally say "من الذكاء
+      // الاصطناعي" (from Artificial Intelligence) — exposing the underlying
+      // infrastructure as a user-facing brand instead of keeping it inside
+      // Qiyas's own voice, the one AI-wrapper pattern a grep audit of every
+      // user-visible string in this file still caught.
       const tag = source === 'curated'
         ? { cls: 'hint-source-tag--verified', text: '✓ من بنك الأسئلة' }
-        : { cls: 'hint-source-tag--ai', text: '✨ شرح فوري من الذكاء الاصطناعي' };
+        : { cls: 'hint-source-tag--ai', text: '✨ شرح من قِيس' };
       const tagEl = textNode('span', `hint-source-tag ${tag.cls}`, tag.text);
       card.appendChild(tagEl);
     }

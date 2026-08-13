@@ -1444,6 +1444,21 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 
 .journey-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .journey-section-head .section-heading { margin: 0; }
+/* Dashboard 5-second-test finding: "where are Quantitative/Verbal" wasn't
+   answerable at a glance — two small mastery chips above the (mixed) node
+   row answer it immediately, and jump straight to that section's full
+   roadmap when tapped. */
+.journey-track-split { display: flex; gap: var(--space-2); margin: var(--space-3) 0; }
+.journey-track-split:empty { display: none; }
+.journey-track-chip {
+  flex: 1; display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper-dim); border: 1.5px solid transparent; border-radius: var(--radius-md);
+  padding: 8px 14px; cursor: pointer; font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.journey-track-chip:hover { border-color: var(--accent); background: var(--accent-tint); }
+.journey-track-chip-label { font-size: var(--text-sm); font-weight: 600; color: var(--ink); }
+.journey-track-chip-count { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-sm); color: var(--accent); direction: ltr; unicode-bidi: isolate; }
 .journey-full-link {
   background: none; border: none; color: var(--accent); font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
   font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 4px;
@@ -1709,6 +1724,12 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .timing-row-value { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); direction: ltr; unicode-bidi: isolate; }
 
 /* ---------- review list (mock exam results) ---------- */
+.exam-review-takeaway {
+  text-align: center; font-weight: 600; font-size: var(--text-md); color: var(--ink);
+  background: var(--accent-tint); border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4); margin: 0 0 var(--space-5);
+}
+.exam-review-takeaway[hidden] { display: none; }
 .review-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 .review-item {
   border: 1.5px solid var(--line);

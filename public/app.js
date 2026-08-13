@@ -1745,6 +1745,26 @@ const App = (() => {
     }
 
     // ---------- 3. learning journey (roadmap, replaces the static arc) ----------
+    // Dashboard 5-second-test finding: the track below mixes Quantitative +
+    // Verbal nodes with no visual distinction, so "where are Quant/Verbal"
+    // wasn't answerable at a glance. Two compact mastery chips first.
+    const splitEl = document.getElementById('journeyTrackSplit');
+    splitEl.innerHTML = '';
+    [
+      { key: 'quantitative', label: 'الكمّي' },
+      { key: 'verbal', label: 'اللفظي' },
+    ].forEach(({ key, label }) => {
+      const sectionSkills = d.skills.filter((s) => s.section === key);
+      if (sectionSkills.length === 0) return;
+      const mastered = sectionSkills.filter((s) => s.status === 'mastery' && s.confidence === 'confirmed').length;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'journey-track-chip';
+      chip.innerHTML = `<span class="journey-track-chip-label">${label}</span><span class="journey-track-chip-count">${mastered}/${sectionSkills.length}</span>`;
+      chip.onclick = () => App.goToJourney(key);
+      splitEl.appendChild(chip);
+    });
+
     const journeyTrack = document.getElementById('journeyTrack');
     journeyTrack.innerHTML = '';
     const doneSkills = d.skills.filter((s) => s.status === 'mastery' && s.confidence === 'confirmed').slice(-5);
@@ -2176,6 +2196,32 @@ const App = (() => {
     }
   }
 
+  /** Results-quality pass: one interpretive sentence — strongest skill,
+   *  weakest skill (only named if it actually had a wrong answer, never
+   *  manufactured) — computed client-side from the exact review array the
+   *  screen already renders in full below. Real data, no new endpoint,
+   *  just the conclusion a raw per-question list doesn't state on its own. */
+  function renderExamTakeaway(review) {
+    const el = document.getElementById('examReviewTakeaway');
+    if (!review || review.length === 0) { el.hidden = true; return; }
+    const bySkill = {};
+    review.forEach((r) => {
+      if (!bySkill[r.skillNameAr]) bySkill[r.skillNameAr] = { correct: 0, total: 0 };
+      bySkill[r.skillNameAr].total++;
+      if (r.isCorrect) bySkill[r.skillNameAr].correct++;
+    });
+    const entries = Object.entries(bySkill).map(([name, s]) => ({ name, pct: s.correct / s.total, ...s }));
+    if (entries.length < 2) { el.hidden = true; return; } // one skill only — nothing to compare
+    entries.sort((a, b) => b.pct - a.pct);
+    const strongest = entries[0];
+    const weakest = entries[entries.length - 1];
+    if (strongest.pct === weakest.pct) { el.hidden = true; return; } // flat performance — no honest contrast to draw
+    let text = `أقوى أداء: ${escapeHtml(strongest.name)}`;
+    if (weakest.correct < weakest.total) text += ` — يحتاج تركيز أكثر: ${escapeHtml(weakest.name)}`;
+    el.textContent = text;
+    el.hidden = false;
+  }
+
   async function finishMockExam() {
     if (mockExamState.timerInterval) clearInterval(mockExamState.timerInterval);
     setLoading(true, 'جاري تصحيح الاختبار...');
@@ -2184,6 +2230,7 @@ const App = (() => {
       showScreen('mock-exam-review');
       renderResultMascot('examResultMascot', result.scoreEstimate >= 60 ? 'celebrating' : 'encouraging');
       document.getElementById('examScoreHeadline').textContent = `${result.scoreEstimate}%`;
+      renderExamTakeaway(result.review);
 
       // Timing analytics (Version 3 Phase C): grouped client-side from the
       // SAME review array already returned — responseTimeMs is a real,

@@ -513,6 +513,11 @@
             <h3 class="section-heading" data-i18n="dashboard_journey_title">رحلتك التعليمية</h3>
             <button type="button" class="journey-full-link" onclick="App.goToJourney()">عرض المسار الكامل ←</button>
           </div>
+          <!-- 5-second-test finding: the track below mixes Quantitative +
+               Verbal skill nodes with no way to tell which is which — a
+               glance couldn't answer "where are Quant/Verbal." Two compact
+               mastery chips, populated in app.js, answer it up front. -->
+          <div class="journey-track-split" id="journeyTrackSplit"></div>
           <div class="journey-track" id="journeyTrack"></div>
         </div>
 
@@ -715,6 +720,12 @@
           <h1 id="examScoreHeadline">—</h1>
           <p class="hero-sub" data-i18n="mock_exam_review_sub">مراجعة كل سؤال أدناه</p>
         </div>
+        <!-- Results-quality finding: score + a raw per-question list is data,
+             not a conclusion — "avoid presenting analytics without
+             interpretation." One real sentence, computed from the exact same
+             review array already fetched, names the strongest/weakest area
+             before the detail list. -->
+        <p class="exam-review-takeaway" id="examReviewTakeaway" hidden></p>
         <div class="profile-section" id="examTimingSection" hidden>
           <p class="profile-section-heading">متوسط الوقت لكل مهارة</p>
           <div id="examTimingList"></div>
