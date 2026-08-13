@@ -304,21 +304,38 @@ const Cards = (() => {
     return card;
   }
 
-  /** Version 6 Phase M/P: the "Interactive Activity" primitive — real
-   *  manipulation with immediate feedback, distinct from both the MCQ
-   *  challenge (read-then-pick) and WorkedExampleCard's passive tap-to-reveal.
-   *  Two variants sharing one component:
-   *  - 'classify': tap each item into one of two real category buckets, one
-   *    item at a time; a wrong tap gets a brief shake and another try, never
-   *    a silent "wrong, moving on."
+  /** Interaction-primitives library ("LEARN → SEE → DO → DISCOVER →
+   *  FEEDBACK" pass) — real manipulation with immediate, deterministic
+   *  feedback, distinct from both the MCQ challenge (read-then-pick) and
+   *  WorkedExampleCard's passive tap-to-reveal. Every variant here grades
+   *  itself with plain JS against curated, fixed-answer data — never a live
+   *  LLM call — so it initializes and grades instantly from published
+   *  lesson data. Ungraded/exploratory by design (matches the existing
+   *  classify/sequence convention): mistakes prompt a retry, never a
+   *  numeric penalty; this is a "DO" moment, not the scored quiz.
+   *  Variants:
+   *  - 'classify': tap each item into one of N category buckets (N>=2), one
+   *    item at a time; a wrong tap gets a brief shake and another try.
+   *    data: { prompt_ar, categories: [label, ...], items: [{text_ar, correctCategory: idx}] }
    *  - 'sequence': tap items (shown shuffled) into what you believe is the
-   *    correct order; once all are placed, right/wrong is checked as a whole
-   *    and a wrong attempt can be reset and retried.
-   *  Ungraded/exploratory by design — mistakes prompt a retry, never a
-   *  penalty. `data` shapes:
-   *    classify:  { prompt_ar, categories: [labelA, labelB], items: [{text_ar, correctCategory: 0|1}] }
-   *    sequence:  { prompt_ar, items: [{text_ar}] } — already given in correct order
-   *  `onComplete()` fires once every item is correctly placed.
+   *    correct order — the accessible tap-based ordering interaction (works
+   *    identically on mouse/touch/keyboard; no drag required to complete).
+   *    data: { prompt_ar, items: [{text_ar}] } — already given in correct order
+   *  - 'match': tap a left term, then its right pair — matched pairs lock in;
+   *    a wrong pairing flashes and un-arms, no penalty.
+   *    data: { prompt_ar, pairs: [{left_ar, right_ar}] }
+   *  - 'highlight': tap the ONE passage segment that answers the prompt
+   *    (evidence/keyword/main-idea selection) — grades on tap, no separate
+   *    "check" step, so feedback is truly immediate.
+   *    data: { prompt_ar, segments: [{text_ar, isCorrect}], explanation_ar? }
+   *  - 'fill': a short, structured completion with deterministic accepted
+   *    answers (never open-ended/LLM-graded).
+   *    data: { prompt_ar, placeholder_ar?, accepted: ['12', '١٢', ...], explanation_ar? }
+   *  Every variant's `onComplete()` fires once solved correctly, and (guarded,
+   *  so this file works standalone in the mascot-preview harness too) gives
+   *  Qiyas a brief, single reaction — a success ping on completion, a
+   *  struggle nudge after repeated wrong attempts on the SAME item — never a
+   *  chat response on every single tap.
    *  NOTE: named `InteractiveActivityCard`, not `ActivityCard` — that name is
    *  already taken by the dashboard's recent-activity-row component below. */
   function InteractiveActivityCard(variant, data, onComplete) {
@@ -326,9 +343,18 @@ const Cards = (() => {
     card.appendChild(textNode('span', 'activity-card-label', '🎮 جرّب بنفسك'));
     if (data.prompt_ar) card.appendChild(textNode('p', 'activity-card-prompt', data.prompt_ar));
 
+    const qiyasCelebrate = () => { try { if (window.Companion) Companion.reactCorrect(); } catch (e) { /* standalone/preview context — no Companion */ } };
+    let struggleFired = false;
+    const qiyasStruggle = () => {
+      if (struggleFired) return;
+      struggleFired = true;
+      try { if (window.Companion) Companion.reactStruggle(); } catch (e) { /* standalone/preview context */ }
+    };
+
     if (variant === 'classify') {
       const items = data.items || [];
       let currentIndex = 0;
+      let wrongCount = 0;
       const itemEl = textNode('p', 'activity-classify-item', '');
       const btnRow = el('div', 'activity-classify-buttons');
       const progressEl = textNode('span', 'activity-card-progress', '');
@@ -338,6 +364,7 @@ const Cards = (() => {
         if (currentIndex >= items.length) {
           itemEl.remove(); btnRow.remove(); progressEl.remove();
           card.appendChild(textNode('p', 'activity-card-complete', '🎉 أحسنت! صنّفتها كلها بشكل صحيح.'));
+          qiyasCelebrate();
           if (onComplete) onComplete();
           return;
         }
@@ -349,15 +376,19 @@ const Cards = (() => {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'activity-classify-btn';
+          btn.setAttribute('aria-label', `${catLabel} — ${items[currentIndex].text_ar}`);
           btn.textContent = catLabel;
           btn.onclick = () => {
             const correct = items[currentIndex].correctCategory === catIdx;
             if (correct) {
               itemEl.className = 'activity-classify-item activity-classify-correct';
               btnRow.querySelectorAll('button').forEach((b) => (b.disabled = true));
+              wrongCount = 0;
               setTimeout(() => { currentIndex++; renderCurrent(); }, 600);
             } else {
               itemEl.className = 'activity-classify-item activity-classify-incorrect';
+              wrongCount++;
+              if (wrongCount >= 3) qiyasStruggle();
               setTimeout(() => { itemEl.className = 'activity-classify-item'; }, 450);
             }
           };
@@ -369,6 +400,7 @@ const Cards = (() => {
       const correctOrder = (data.items || []).map((it) => it.text_ar);
       const shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
       const chosen = [];
+      let wrongCount = 0;
       const poolEl = el('div', 'activity-sequence-pool');
       const chosenEl = el('div', 'activity-sequence-chosen');
       const statusEl = el('div', 'activity-sequence-status');
@@ -399,8 +431,11 @@ const Cards = (() => {
         const isCorrect = chosen.every((t, i) => t === correctOrder[i]);
         if (isCorrect) {
           statusEl.appendChild(textNode('p', 'activity-card-complete', '🎉 أحسنت! هذا هو الترتيب الصحيح.'));
+          qiyasCelebrate();
           if (onComplete) onComplete();
         } else {
+          wrongCount++;
+          if (wrongCount >= 3) qiyasStruggle();
           statusEl.appendChild(textNode('p', 'activity-card-retry', 'مو الترتيب الصحيح — حاول مرة ثانية.'));
           const retryBtn = document.createElement('button');
           retryBtn.type = 'button';
@@ -417,6 +452,133 @@ const Cards = (() => {
       }
       renderPool();
       renderChosen();
+    } else if (variant === 'match') {
+      const pairs = data.pairs || [];
+      const rightShuffled = pairs.map((p, i) => ({ text: p.right_ar, pairIdx: i })).sort(() => Math.random() - 0.5);
+      const matched = new Set();
+      let armedLeft = null;
+      let wrongCount = 0;
+      const gridEl = el('div', 'activity-match-grid');
+      const leftColEl = el('div', 'activity-match-col');
+      const rightColEl = el('div', 'activity-match-col');
+      gridEl.append(leftColEl, rightColEl);
+      const statusEl = el('div', 'activity-card-progress');
+      card.append(gridEl, statusEl);
+
+      function refresh() {
+        statusEl.textContent = `${matched.size} / ${pairs.length}`;
+        leftColEl.innerHTML = '';
+        pairs.forEach((p, i) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'activity-match-item' + (matched.has(i) ? ' activity-match-done' : '') + (armedLeft === i ? ' activity-match-armed' : '');
+          btn.textContent = p.left_ar;
+          btn.disabled = matched.has(i);
+          btn.setAttribute('aria-pressed', String(armedLeft === i));
+          btn.onclick = () => { armedLeft = armedLeft === i ? null : i; refresh(); };
+          leftColEl.appendChild(btn);
+        });
+        rightColEl.innerHTML = '';
+        rightShuffled.forEach(({ text, pairIdx }) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'activity-match-item' + (matched.has(pairIdx) ? ' activity-match-done' : '');
+          btn.textContent = text;
+          btn.disabled = matched.has(pairIdx);
+          btn.onclick = () => {
+            if (armedLeft === null) return;
+            if (armedLeft === pairIdx) {
+              matched.add(pairIdx);
+              armedLeft = null;
+              wrongCount = 0;
+              refresh();
+              if (matched.size === pairs.length) {
+                card.appendChild(textNode('p', 'activity-card-complete', '🎉 أحسنت! طابقتها كلها بشكل صحيح.'));
+                qiyasCelebrate();
+                if (onComplete) onComplete();
+              }
+            } else {
+              btn.classList.add('activity-match-wrong');
+              wrongCount++;
+              if (wrongCount >= 3) qiyasStruggle();
+              setTimeout(() => { btn.classList.remove('activity-match-wrong'); armedLeft = null; refresh(); }, 450);
+            }
+          };
+          rightColEl.appendChild(btn);
+        });
+      }
+      refresh();
+    } else if (variant === 'highlight') {
+      const segments = data.segments || [];
+      let wrongCount = 0;
+      const passageEl = el('div', 'activity-highlight-passage');
+      const statusEl = el('div', 'activity-card-progress');
+      segments.forEach((seg, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'activity-highlight-segment';
+        btn.textContent = seg.text_ar;
+        btn.setAttribute('aria-label', `تحديد: ${seg.text_ar}`);
+        btn.onclick = () => {
+          if (seg.isCorrect) {
+            passageEl.querySelectorAll('button').forEach((b) => (b.disabled = true));
+            btn.className = 'activity-highlight-segment activity-highlight-correct';
+            const msg = data.explanation_ar ? `🎉 بالضبط! ${data.explanation_ar}` : '🎉 بالضبط!';
+            card.appendChild(textNode('p', 'activity-card-complete', msg));
+            qiyasCelebrate();
+            if (onComplete) onComplete();
+          } else {
+            btn.className = 'activity-highlight-segment activity-highlight-incorrect';
+            wrongCount++;
+            if (wrongCount >= 3) qiyasStruggle();
+            setTimeout(() => { btn.className = 'activity-highlight-segment'; }, 450);
+          }
+        };
+        passageEl.appendChild(btn);
+      });
+      card.append(passageEl, statusEl);
+    } else if (variant === 'fill') {
+      let wrongCount = 0;
+      const inputRow = el('div', 'activity-fill-row');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'activity-fill-input';
+      input.placeholder = data.placeholder_ar || 'إجابتك...';
+      input.setAttribute('aria-label', data.prompt_ar || 'إجابتك');
+      const checkBtn = document.createElement('button');
+      checkBtn.type = 'button';
+      checkBtn.className = 'btn-primary activity-fill-btn';
+      checkBtn.textContent = 'تحقّق';
+      const feedbackEl = el('div', 'activity-fill-feedback');
+      inputRow.append(input, checkBtn);
+      card.append(inputRow, feedbackEl);
+
+      // Deterministic normalization only — trims, collapses whitespace, unifies
+      // Arabic-Indic digits to Western, strips tashkeel — never an LLM judgment call.
+      function normalize(s) {
+        return String(s || '').trim().replace(/\s+/g, ' ')
+          .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+          .replace(/[ً-ْ]/g, '');
+      }
+      const acceptedNormalized = (data.accepted || []).map(normalize);
+
+      function check() {
+        const isCorrect = acceptedNormalized.includes(normalize(input.value));
+        feedbackEl.innerHTML = '';
+        if (isCorrect) {
+          input.disabled = true; checkBtn.disabled = true;
+          const msg = data.explanation_ar ? `🎉 صحيح! ${data.explanation_ar}` : '🎉 صحيح!';
+          feedbackEl.appendChild(textNode('p', 'activity-card-complete', msg));
+          qiyasCelebrate();
+          if (onComplete) onComplete();
+        } else {
+          wrongCount++;
+          if (wrongCount >= 3) qiyasStruggle();
+          feedbackEl.appendChild(textNode('p', 'activity-card-retry', data.hint_ar || 'مو صحيحة — راجع خطواتك وحاول مرة ثانية.'));
+        }
+      }
+      checkBtn.onclick = check;
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); check(); } });
     }
     return card;
   }

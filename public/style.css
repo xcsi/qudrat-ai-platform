@@ -391,7 +391,11 @@
 .activity-card-complete, .activity-card-retry { margin: 0; font-weight: 600; font-size: var(--text-sm); }
 .activity-card-complete { color: var(--teal); }
 .activity-card-retry { color: var(--coral); margin-bottom: var(--space-2); }
-.activity-card-progress { display: block; margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-muted); }
+/* Real bug found via rendered screenshot: "1 / 6" was rendering as "6 / 1" —
+   a plain Latin-numeral fraction string inherits the page's dir="rtl" and
+   the bidi algorithm reorders it. Same fix already used elsewhere in this
+   file (.counter-ltr) for the exact same class of string. */
+.activity-card-progress { display: block; margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-muted); direction: ltr; unicode-bidi: isolate; }
 
 .activity-classify-item {
   background: white; border-radius: var(--radius-sm); padding: var(--space-3);
@@ -426,6 +430,58 @@
   padding: var(--space-2) var(--space-3); font-size: var(--text-sm);
 }
 .activity-sequence-status { margin-top: var(--space-2); }
+
+/* ---------- interaction primitives: match / highlight / fill ----------
+   Accessibility (all variants, incl. classify/sequence above): every
+   selectable unit is a real <button>, so keyboard Tab/Enter/Space and
+   screen-reader semantics work with zero extra plumbing; this rule just
+   makes the browser's own focus ring actually visible against these
+   surfaces instead of the default (often near-invisible) outline. */
+.activity-card button:focus-visible {
+  outline: 2.5px solid var(--ink); outline-offset: 2px;
+}
+
+.activity-match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.activity-match-col { display: flex; flex-direction: column; gap: var(--space-2); }
+.activity-match-item {
+  background: white; border: 1.5px solid var(--line); color: var(--ink);
+  border-radius: var(--radius-sm); padding: var(--space-3); min-height: 48px;
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-weight: 600;
+  font-size: var(--text-sm); cursor: pointer; text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.activity-match-item:hover:not(:disabled) { border-color: var(--accent); }
+.activity-match-item.activity-match-armed { border-color: var(--accent); background: var(--accent-tint); box-shadow: 0 0 0 3px var(--accent-tint); }
+.activity-match-item.activity-match-done { background: var(--teal-tint); border-color: var(--teal); color: var(--teal); cursor: default; opacity: 0.85; }
+.activity-match-item.activity-match-wrong { background: var(--coral-tint); border-color: var(--coral); animation: activityShake 0.35s ease; }
+.activity-match-item:disabled { cursor: default; }
+
+/* 'highlight': segments flow as natural reading text (RTL-safe via
+   inline-flex + wrap) rather than a list of options — reads as "tap the
+   part of the passage," not "pick from a menu." */
+.activity-highlight-passage {
+  display: flex; flex-wrap: wrap; gap: 6px; line-height: 2.1;
+}
+.activity-highlight-segment {
+  background: white; border: 1.5px solid var(--line); color: var(--ink-soft);
+  border-radius: var(--radius-sm); padding: 6px 10px;
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif; font-size: var(--text-sm);
+  line-height: 1.6; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
+}
+.activity-highlight-segment:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-tint); }
+.activity-highlight-segment.activity-highlight-correct { background: var(--teal-tint); border-color: var(--teal); color: var(--ink); cursor: default; }
+.activity-highlight-segment.activity-highlight-incorrect { background: var(--coral-tint); border-color: var(--coral); animation: activityShake 0.35s ease; }
+
+.activity-fill-row { display: flex; gap: var(--space-2); }
+.activity-fill-input {
+  flex: 1; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+  padding: 11px 14px; font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  font-size: var(--text-md); background: white; color: var(--ink);
+}
+.activity-fill-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+.activity-fill-btn { flex-shrink: 0; padding: 0 var(--space-5); }
+.activity-fill-feedback { margin-top: var(--space-3); }
+.activity-fill-feedback:empty { display: none; }
 
 /* ---------- Version 6 Phase N: QuizCard (in-flow challenge + hint) ---------- */
 .quiz-card { animation: lessonStepPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }

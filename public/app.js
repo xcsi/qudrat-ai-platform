@@ -1152,7 +1152,20 @@ const App = (() => {
         steps.push({ type: 'objective' });
         genResult.lesson.concept_explanation.forEach((block) => steps.push({ type: 'concept', block }));
       }
-      if (genResult.items.length > 0) steps.push({ type: 'challenge', item: genResult.items[0] });
+      // Interactive learning system: a curated lesson can replace the
+      // mini-challenge's multiple-choice question with a richer, fully
+      // deterministic interaction (order/classify/match/highlight/fill —
+      // see curated-interactions.js) — no live LLM call needed to grade it.
+      // A lesson with no curated entry falls through to exactly today's
+      // MCQ mini-challenge, unchanged.
+      const curated = typeof CuratedInteractions !== 'undefined' ? CuratedInteractions.forLessonTitle(genResult.lesson.title_ar) : null;
+      let usedCuratedChallenge = false;
+      if (curated) {
+        steps.push({ type: 'section', section: { component: 'InteractiveActivityCard', parameters: { variant: curated.variant, ...curated.data } } });
+        usedCuratedChallenge = true;
+      } else if (genResult.items.length > 0) {
+        steps.push({ type: 'challenge', item: genResult.items[0] });
+      }
       if (hasSections) {
         // The authored sections already included a real 'summary' section
         // (content-only) — this step is just the CTA into practice.
@@ -1163,7 +1176,11 @@ const App = (() => {
       }
       state.lessonSteps = steps;
       state.lessonStepIndex = 0;
-      state.lessonIndex = genResult.items.length > 0 ? 1 : 0;
+      // The curated interaction above never consumes items[0] via the real
+      // answer endpoint (it's graded client-side, deterministically) — start
+      // the formal quiz at 0 so that item still gets asked there, same fix
+      // as skipToLessonQuiz()'s own item-0 bug below.
+      state.lessonIndex = (genResult.items.length > 0 && !usedCuratedChallenge) ? 1 : 0;
 
       showScreen('lesson-intro');
       // The stepper's own 'hero' step (steps[0], above) now shows this same
