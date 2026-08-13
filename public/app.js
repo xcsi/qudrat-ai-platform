@@ -228,7 +228,13 @@ const App = (() => {
     // LESSON: "near the relevant concept or guidance area" — inline next to
     // the lesson title, sized as the active teaching moment it is.
     'lesson-intro': ['inline', '#lessonTitle', 'teaching'],
-    'lesson-quiz': ['inline', '#lessonTitle', 'teaching'],
+    // Real bug found via rendered screenshot: '#lessonTitle' only exists on
+    // the lesson-intro screen, not lesson-quiz — positionNear() was
+    // measuring a hidden, zero-size element on a DIFFERENT (hidden) screen,
+    // so the widget pinned itself near the very top of the viewport instead
+    // of near this screen's own content. '#lessonCounter' is this screen's
+    // real anchor.
+    'lesson-quiz': ['inline', '#lessonCounter', 'teaching'],
     // finishLesson() calls Companion.celebrate() right after showing this
     // screen — surface that speech next to the big .result-mascot instead
     // of a separate bottom-corner popup.
@@ -1061,6 +1067,7 @@ const App = (() => {
   // ---------- next lesson (Version 3 Phase B — micro-learning stepper) ----------
   function renderLessonSkeleton(reasonAr) {
     showScreen('lesson-intro');
+    document.getElementById('lessonReasonCard').hidden = false;
     document.getElementById('lessonReasonText').textContent = reasonAr || 'جاري تجهيز درسك...';
     document.getElementById('lessonTitle').textContent = 'جاري تحضير الدرس...';
     document.getElementById('lessonVoiceContainer').innerHTML = '';
@@ -1159,10 +1166,13 @@ const App = (() => {
       state.lessonIndex = genResult.items.length > 0 ? 1 : 0;
 
       showScreen('lesson-intro');
-      document.getElementById('lessonReasonText').textContent = recommendation.reasonAr;
+      // The stepper's own 'hero' step (steps[0], above) now shows this same
+      // reason as real step-1 content — hide the skeleton-only static banner
+      // so the sentence doesn't appear twice on screen at once.
+      document.getElementById('lessonReasonCard').hidden = true;
       document.getElementById('lessonTitle').textContent = genResult.lesson.title_ar;
       // Educational Companion: a companion-voiced version of the exact same
-      // zpdSelector-produced reason string already shown in the static banner
+      // zpdSelector-produced reason string already shown in the hero step
       // above — not a separate/different message, just spoken by the companion too.
       Companion.introduceTopic(genResult.lesson.title_ar, recommendation.reasonAr);
 
@@ -2052,6 +2062,13 @@ const App = (() => {
       optionsEl.appendChild(btn);
     });
     startLearningTimer(document.getElementById('practiceTimer'));
+    // Real bug found via rendered screenshot: this screen's content (and the
+    // #practiceTitle anchor's resulting position) only exists once this
+    // function runs — showScreen('practice')'s own Companion.enter() call
+    // measured the anchor while #practiceQuizArea was still empty, pinning
+    // the widget ~300px away from where the title actually ended up once
+    // real content made the centered flex column taller. Re-measure now.
+    Companion.reposition();
   }
 
   async function answerPractice(itemId, selectedIndex, btnEl) {

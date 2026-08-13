@@ -1296,7 +1296,14 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .option-btn.answer-pop { animation: answerPop 0.3s ease; }
 
 /* ---------- lesson concept ---------- */
-.zpd-reason-card {
+/* :not([hidden]) matters — same footgun documented elsewhere in this file
+   (splash, .onboarding-visual): without it, this author-stylesheet
+   `display: flex` outranks the browser's default `[hidden]{display:none}`,
+   so #lessonReasonCard's `.hidden = true` (app.js) silently failed to
+   actually hide it, and the ZPD-reason sentence kept rendering twice (this
+   card + the lesson stepper's own 'hero' step, which reuses this same
+   class) — found via rendered screenshot. */
+.zpd-reason-card:not([hidden]) {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -1417,19 +1424,23 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
 .journey-node-icon {
   width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
   justify-content: center; font-size: 19px; border: 2px solid var(--line); background: white;
-  color: var(--text-muted); transition: transform 0.15s ease;
+  color: var(--slate-tint); transition: transform 0.15s ease;
 }
+.journey-node-icon svg { width: 18px; height: 18px; }
 .journey-node-label {
   font-size: 10.5px; text-align: center; color: var(--text-muted); line-height: 1.3;
   max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.journey-node.done .journey-node-icon { background: var(--teal-tint); border-color: var(--teal); color: var(--teal); }
+/* 'done' — a solid filled trail: the more of these in a row, the more the
+   roadmap reads as ground already covered, not a flat list of options. */
+.journey-node.done .journey-node-icon { background: var(--teal); border-color: var(--teal); color: white; }
 .journey-node.current .journey-node-icon {
   background: var(--accent); border-color: var(--accent); color: white;
   animation: companionIdleBob 2.4s ease-in-out infinite; box-shadow: 0 0 0 4px var(--accent-tint);
 }
+.journey-node.current .journey-node-icon svg { width: 12px; height: 12px; }
 .journey-node.current .journey-node-label { color: var(--ink); font-weight: 700; }
-.journey-node.exam .journey-node-icon { background: var(--ink); border-color: var(--ink); color: #FFD166; }
+.journey-node.exam .journey-node-icon { background: var(--ink); border-color: var(--ink); color: #FFD166; font-size: 18px; }
 
 .journey-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .journey-section-head .section-heading { margin: 0; }
@@ -2448,6 +2459,30 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
   .phone:has(.sidebar-nav[hidden]) .companion-panel { right: 0; }
 
   .onboarding-visual { display: none; }
+
+  /* Screenshot-driven finding: this screen group already has a dedicated,
+     integrated Qiyas presence (the two-panel .onboarding-visual composition
+     below) — but any reactive Companion.say() (the welcome greet, the
+     post-mission encourage(), etc.) still pops the floating corner widget
+     on top of it, since that widget's reactive fallback is 'floating' by
+     default. Two Qiyas instances on screen at once reads as exactly the
+     "floating chatbot bolted onto the product" pattern the composition was
+     built to avoid. Desktop only — mobile has no two-panel alternative, so
+     the floating widget stays the only Qiyas presence there. */
+  .phone:has(
+    .screen[data-screen="welcome"]:not([hidden]),
+    .screen[data-screen="language-select"]:not([hidden]),
+    .screen[data-screen="gender-select"]:not([hidden]),
+    .screen[data-screen="register"]:not([hidden]),
+    .screen[data-screen="login"]:not([hidden]),
+    .screen[data-screen="grade-select"]:not([hidden]),
+    .screen[data-screen="target-score-select"]:not([hidden]),
+    .screen[data-screen="exam-date-select"]:not([hidden]),
+    .screen[data-screen="path-select"]:not([hidden]),
+    .screen[data-screen="mission-transition"]:not([hidden]),
+    .screen[data-screen="diagnostic-done"]:not([hidden]),
+    .screen[data-screen="mock-exam-intro"]:not([hidden])
+  ) .companion-widget { display: none; }
 
   main#app:has(.screen[data-screen="welcome"]:not([hidden])),
   main#app:has(.screen[data-screen="language-select"]:not([hidden])),

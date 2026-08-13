@@ -633,9 +633,29 @@ const Cards = (() => {
    *  long labels to fit a horizontal scroller; the full "خريطتك التعليمية"
    *  screen has room to show them in full — same component, same status
    *  semantics, just not truncated. */
+  /** Human-centered art-direction pass: geometric state icons instead of
+   *  emoji glyphs (⬜/🟢/✅ rendered as an inconsistent mix of the platform's
+   *  own emoji font — "random emoji UI," and every "upcoming" node looked
+   *  identical regardless of how far into the roadmap it was). 'done' is a
+   *  solid filled circle with a check — the more of these appear in a row,
+   *  the more the roadmap itself reads as a trail already walked, even
+   *  without a literal connecting line. 'exam' keeps a single trophy glyph
+   *  since it's a genuine one-off milestone, not a systematic icon set. */
+  function journeyNodeIcon(state) {
+    if (state === 'done') {
+      return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+    if (state === 'current') {
+      return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>';
+    }
+    if (state === 'exam') return '🏆';
+    return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>';
+  }
+
   function JourneyNode(label, state, wide) {
     const node = el('div', `journey-node ${state}${wide ? ' journey-node-wide' : ''}`);
-    const icon = textNode('div', 'journey-node-icon', state === 'done' ? '✅' : state === 'current' ? '🟢' : state === 'exam' ? '🏆' : '⬜');
+    const icon = el('div', 'journey-node-icon');
+    icon.innerHTML = journeyNodeIcon(state);
     node.appendChild(icon);
     node.appendChild(textNode('span', 'journey-node-label', label));
     return node;

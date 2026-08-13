@@ -377,7 +377,12 @@
       <!-- SCREEN: lesson intro (Version 3 Phase B — a micro-learning stepper,
            one concept/challenge/example at a time, not a single long scroll) -->
       <section class="screen" data-screen="lesson-intro" hidden>
-        <div class="zpd-reason-card">
+        <!-- Loading-skeleton-only banner: shows the ZPD reason while the real
+             lesson is still generating. Hidden once real content is ready —
+             the stepper's own 'hero' step (see app.js) shows this exact text
+             as step 1, so keeping this permanently visible too duplicated it
+             on-screen twice at once (found via rendered screenshot). -->
+        <div class="zpd-reason-card" id="lessonReasonCard">
           <span class="zpd-reason-icon">✦</span>
           <p class="zpd-reason-text" id="lessonReasonText">—</p>
         </div>

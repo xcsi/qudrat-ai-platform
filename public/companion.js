@@ -273,6 +273,10 @@ const Companion = (() => {
    *  'passive' | 'coach' | 'teaching', default 'passive'. Plays a slide+fade
    *  entrance each time it (re)appears — "enters and leaves the screen
    *  naturally" instead of always sitting in the same spot. */
+  // Tracks the live anchor selector while in 'inline' mode so reposition()
+  // (below) can re-measure it later without the caller having to repeat it.
+  let currentInlineAnchorSelector = null;
+
   function enter(mode = 'floating', anchorSelector = null, size = 'passive') {
     createWidgetIfNeeded();
     const phone = document.querySelector('.phone');
@@ -283,6 +287,7 @@ const Companion = (() => {
     widgetEl.classList.remove('companion-mode-floating', 'companion-mode-inline', 'companion-mode-hidden', 'companion-leaving');
     widgetEl.classList.remove(...WIDGET_SIZE_CLASSES);
     widgetEl.classList.add(`companion-size-${size}`);
+    currentInlineAnchorSelector = null;
 
     if (mode === 'hidden') {
       widgetEl.classList.add('companion-mode-hidden');
@@ -293,6 +298,7 @@ const Companion = (() => {
     if (anchor) {
       widgetEl.classList.add('companion-mode-inline');
       positionNear(anchor);
+      currentInlineAnchorSelector = anchorSelector;
     } else {
       widgetEl.classList.add('companion-mode-floating');
       resetFloatingPosition();
@@ -303,6 +309,25 @@ const Companion = (() => {
     void widgetEl.offsetWidth; // restart the animation even if it's already mid-transition
     widgetEl.classList.add('companion-entering');
     enterTimer = setTimeout(() => { if (widgetEl) widgetEl.classList.remove('companion-entering'); }, 450);
+  }
+
+  /** Real bug found via rendered screenshot: on the quiz-type screens
+   *  (diagnostic/lesson-quiz/practice/mock-exam-quiz), `.screen` is a
+   *  vertically-CENTERED flex column (`justify-content: center`) whose
+   *  content height changes once the actual question loads (an async
+   *  fetch, after `showScreen()`/`enter()` already ran synchronously with
+   *  a near-empty screen). Centering a taller block moves everything in it
+   *  — including the anchor `enter('inline', ...)` measured — so the
+   *  widget's pinned position went stale the moment real content arrived,
+   *  landing it a couple hundred px away from its actual anchor. Callers
+   *  that render async content into an inline-anchored screen should call
+   *  this once that content is in the DOM — re-measures the SAME anchor
+   *  without replaying the entrance animation or touching the bubble. */
+  function reposition() {
+    if (!widgetEl || !currentInlineAnchorSelector) return;
+    if (!widgetEl.classList.contains('companion-mode-inline')) return;
+    const anchor = document.querySelector(currentInlineAnchorSelector);
+    if (anchor) positionNear(anchor);
   }
 
   /** Fully removes the companion from the page (not just its speech bubble) —
@@ -642,7 +667,7 @@ const Companion = (() => {
   return {
     updateMemory, greet, introduceTopic, explain, celebrate, encourage,
     warnWeakSkill, introduceQuiz, explainMistake, hide, mascotMarkup, renderInlineCard,
-    enter, leave, reactCorrect, reactTimerPressure, reactInactivity, reactStruggle,
+    enter, leave, reposition, reactCorrect, reactTimerPressure, reactInactivity, reactStruggle,
     openPanel, closePanel, setReactiveFallback,
     // Exposed so any screen that renders a static (non-floating-widget) Qiyas
     // instance via mascotMarkup() — the dashboard hero avatar, etc. — can set
