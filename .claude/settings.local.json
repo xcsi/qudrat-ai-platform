@@ -5,7 +5,13 @@
       "WebFetch(domain:qiyas.sa)",
       "Bash(start *)",
       "PowerShell($path = \\(Resolve-Path \"lessons\\\\0002-exponents-critical-values.html\"\\).Path; try { code $path } catch {}; Start-Process $path)",
-      "PowerShell($path = \\(Resolve-Path \"lessons\\\\0003-linear-quadratic-equations.html\"\\).Path; try { code $path } catch {}; Start-Process $path)"
+      "PowerShell($path = \\(Resolve-Path \"lessons\\\\0003-linear-quadratic-equations.html\"\\).Path; try { code $path } catch {}; Start-Process $path)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3300/ --max-time 5)",
+      "Bash(npx playwright *)",
+      "Bash(node \"C:\\\\Users\\\\xiaoo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-xiaoo-Downloads-learning-Qias-FINAL-14-final-9\\\\6cea5ecc-c864-485d-a8a7-ed1ea8b9aaa5\\\\scratchpad\\\\responsive-check.mjs\")",
+      "Bash(cp \"C:\\\\Users\\\\xiaoo\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-xiaoo-Downloads-learning-Qias-FINAL-14-final-9\\\\6cea5ecc-c864-485d-a8a7-ed1ea8b9aaa5\\\\scratchpad\\\\responsive-check.mjs\" ./_tmp_responsive_check.mjs)",
+      "Bash(node _tmp_responsive_check.mjs)"
     ]
   }
 }

@@ -13,7 +13,7 @@
 // 'match' | 'highlight' | 'fill'), `data` is that variant's own data shape
 // (see the doc comment on InteractiveActivityCard in Cards.js). Keyed by
 // exact `lesson.title_ar` today; swapping to a stable skill-id key is a
-// one-line change once curated authoring needs more than 4 entries.
+// one-line change once curated authoring needs many more entries than this.
 // ============================================================
 
 const CuratedInteractions = (() => {
@@ -84,6 +84,37 @@ const CuratedInteractions = (() => {
           { text_ar: 'أعلنت إدارة المكتبة أن الدخول سيكون مجانيًا لجميع الطلاب حتى نهاية العام.', isCorrect: false },
         ],
         explanation_ar: 'هذه الجملة هي الوحيدة التي تذكر رقمًا محددًا لعدد الكتب.',
+      },
+    },
+
+    // Verbal — word-pair relationship identification: this skill IS matching
+    // (pair a word-relationship to its category), so `match` fits the concept
+    // more directly than a multiple-choice menu ever could.
+    'تحديد العلاقة بين زوج الكلمات': {
+      variant: 'match',
+      data: {
+        prompt_ar: 'طابق كل زوج كلمات مع نوع العلاقة التي تربط بينهما.',
+        pairs: [
+          { left_ar: 'إصبع : يد', right_ar: 'جزء من كل' },
+          { left_ar: 'مطر : فيضان', right_ar: 'سبب ونتيجة' },
+          { left_ar: 'سكين : تقطيع', right_ar: 'أداة ووظيفتها' },
+          { left_ar: 'طبيب : مستشفى', right_ar: 'شخص ومكان عمله' },
+          { left_ar: 'أسد : غابة', right_ar: 'كائن وموطنه' },
+        ],
+      },
+    },
+
+    // Quant — basic percentage calculation: a short deterministic numeric
+    // result is the actual skill (not a menu of 4 plausible-looking
+    // percentages), so `fill` matches the concept better than an MCQ.
+    'حساب النسبة المئوية الأساسي': {
+      variant: 'fill',
+      data: {
+        prompt_ar: 'احسب: كم يساوي 20% من 150؟',
+        placeholder_ar: 'اكتب الناتج...',
+        accepted: ['30'],
+        hint_ar: '20% تعني 20 من كل 100 — حوّلها إلى كسر عشري (0.2) واضربها في 150.',
+        explanation_ar: '20% من 150 = 150 × 0.2 = 30.',
       },
     },
   };
