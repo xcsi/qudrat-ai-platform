@@ -830,29 +830,64 @@ main#app:has(.screen[data-screen="mock-exam-review"]:not([hidden])) {
    (an author-stylesheet rule) outranks the browser's default [hidden]
    { display: none } UA rule, so setting el.hidden = true in showScreen()
    would silently fail to actually hide this screen. Found via visual QA:
-   the splash content kept rendering on top of the next onboarding screen. */
+   the splash content kept rendering on top of the next onboarding screen.
+   ROOT-CAUSE FIX (release QA): this screen used to render as an ordinary
+   in-flow `.screen` child of `main#app` inside `.phone` — which meant it
+   inherited EVERY ancestor constraint meant for the app shell, not a splash:
+   `.phone`'s 430/680px max-width and 90vh rounded-card treatment on
+   tablet/large-phone widths, the >=1024px desktop grid's reserved 248px
+   sidebar column, `main#app`'s padding, and the plain `.screen` rule's
+   760px max-width + auto margins at desktop. The result was a small
+   floating card centered in empty space instead of a true full-viewport
+   splash. Fix: take it out of that flow entirely with `position: fixed`
+   (the `.phone`/`main#app` ancestors have no transform/filter, so this
+   escapes to the real viewport, not a clipped ancestor box) sized directly
+   off the viewport, and explicitly neutralize every ancestor property that
+   would otherwise still win the cascade for this element (max-width/
+   margin/width/height/padding all get contested by `.phone`'s media
+   queries and the desktop `.screen` rule — per-property cascade means
+   simply raising this rule's own specificity isn't enough; each contested
+   property has to be re-declared here). z-index sits above the sidebar/
+   topbar/companion panel (highest prior z-index in this file is 60) so
+   no app-shell chrome can show through even for a single frame. */
 .screen[data-screen="splash"]:not([hidden]) {
+  position: fixed; inset: 0; z-index: 9999;
+  max-width: none; margin: 0; padding: 0;
+  width: 100vw; height: 100vh; height: 100dvh;
   display: flex; align-items: center; justify-content: center;
-  min-height: calc(100vh - 60px);
-  background:
+  background-color: var(--paper);
+  background-image:
     radial-gradient(circle at 15% 15%, rgba(30,58,138,0.06), transparent 40%),
     radial-gradient(circle at 85% 25%, rgba(20,184,166,0.08), transparent 36%),
     radial-gradient(circle at 25% 90%, rgba(120,137,185,0.07), transparent 34%);
 }
+/* Same root cause, same fix pattern as the topbar rule below: the sidebar
+   is only visually absent during splash because the fixed overlay above
+   fully covers it, but a sighted-but-not-visible sidebar would still sit
+   in the keyboard tab order. Hide it outright while splash is active. */
+.phone:has(.screen[data-screen="splash"]:not([hidden])) .sidebar-nav { display: none; }
 .splash-content { text-align: center; }
 .splash-logo {
-  height: 80px; width: auto; aspect-ratio: 235 / 95; object-fit: contain;
+  /* clamp(): reads at a comfortable, brand-forward size at every viewport
+     instead of one fixed px value that was tuned for a cramped 430-760px
+     box and no longer matches a true full-viewport canvas. */
+  height: clamp(56px, 6vw, 88px); width: auto; aspect-ratio: 235 / 95; object-fit: contain;
   margin: 0 auto 28px; display: block;
   animation: welcomeIconIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 /* Human-centered art-direction pass: Qiyas is the second-biggest thing on
    this screen after the logo (the brief's own splash sketch puts it right
-   under the wordmark) — bumped from 96px, which read as a small accent,
-   toward the onboarding/celebration tier so it actually anchors the
-   composition instead of the logo standing alone with dead space below it. */
+   under the wordmark) — sized to actually anchor the composition instead
+   of the logo standing alone with dead space below it. clamp() keeps that
+   true across the full viewport range instead of one fixed px value:
+   88px at narrow mobile, up to 160px on desktop/laptop canvases. */
 .splash-mascot {
-  width: 128px; height: 128px; margin: 0 auto 28px;
+  width: clamp(88px, 14vw, 160px); height: clamp(88px, 14vw, 160px); margin: 0 auto 28px;
   animation: splashMascotIn 0.6s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo, .splash-mascot, .splash-tagline, .splash-path { animation: none; }
+  .splash-path-fill { animation: none; transform: none; width: 100%; opacity: 0.55; }
 }
 @keyframes splashMascotIn {
   from { opacity: 0; transform: translateY(10px) scale(0.82); }
