@@ -29,6 +29,26 @@ import { Pool, types } from 'pg';
 const DATE_OID = 1082;
 types.setTypeParser(DATE_OID, (val: string) => val);
 
+// Postgres OID 1700 = `numeric`/`decimal` (sessions.score_estimate,
+// srs_state.ease_factor). node-postgres's default parser leaves these as
+// STRINGS on the wire — deliberately, to avoid silent float-precision loss
+// for callers who need exact decimal arithmetic — but every consumer here
+// (Session.score_estimate, SrsState.ease_factor in types/index.ts) is typed
+// `number` and does plain arithmetic on it. `+` on a string operand is
+// concatenation, not addition: found live on the dashboard hero screen,
+// where `baseline + masteredCount * 0.6` (httpServer.ts's handleDashboard)
+// silently became `"62" + 7.8` = `"627.8"` after a real server restart
+// re-hydrated sessions from Postgres — Math.round/min then clamped that to
+// a nonsensical "100% current score" against an 88 target. SrsService's
+// `ease_factor + 0.1` on a correct review has the same failure mode, via
+// Math.max coercing the resulting garbled string to NaN. This project has
+// no currency/financial use of `numeric` (scores and ease factors only),
+// so parsing eagerly to a JS float here — once, at the connection layer,
+// same fix shape as the DATE_OID override above — is safe and matches what
+// every consumer already assumes.
+const NUMERIC_OID = 1700;
+types.setTypeParser(NUMERIC_OID, (val: string) => parseFloat(val));
+
 let pool: Pool | null = null;
 
 export function getPool(): Pool {
